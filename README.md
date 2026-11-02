@@ -37,13 +37,13 @@
 
 ## 截图
 
-| 主界面 | 移动端布局 |
+| 主界面（中文） | 点名祈愿卡池 |
 |---|---|
-| ![主界面](screenshot/mobile-weapon.jpg) | ![移动端](screenshot/switch-banner.jpg) |
+| ![主界面](screenshot/main-cn.jpg) | ![点名卡池](screenshot/rollcall-banner-cn.jpg) |
 
-| 神铸定轨 | 库存 |
+| 名单管理（勾选与导入） | 点名结果 |
 |---|---|
-| ![定轨](screenshot/epitomized-path.jpg) | ![库存](screenshot/inventory.jpg) |
+| ![名单管理](screenshot/rollcall-manage-cn.jpg) | ![点名结果](screenshot/rollcall-result.jpg) |
 
 ## 下载与安装
 
