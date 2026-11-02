@@ -31,7 +31,7 @@ win:
     # 便携版：免安装目录，CI 里再压成 zip
     - target: dir
       arch: [x64]
-  artifactName: genshin-wish-roll-${version}-windows-x64-setup.${ext}
+  artifactName: genshin-wish-roll-richkobe-${version}-windows-x64-setup.${ext}
 
 nsis:
   oneClick: false

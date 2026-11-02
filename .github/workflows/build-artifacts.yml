@@ -5,9 +5,9 @@
 # 未经用户明确指示，不合并主干、不打 tag、不创建 Release。
 #
 # 产物命名遵循 CLAUDE.md 0.10（软件名-版本-平台.扩展名）：
-#   - genshin-wish-roll-<版本>-web.zip                  Web 静态站
-#   - genshin-wish-roll-<版本>-windows-x64-setup.exe    Windows 安装版（NSIS）
-#   - genshin-wish-roll-<版本>-windows-x64-portable.zip Windows 便携版
+#   - genshin-wish-roll-richkobe-<版本>-web.zip                  Web 静态站
+#   - genshin-wish-roll-richkobe-<版本>-windows-x64-setup.exe    Windows 安装版（NSIS）
+#   - genshin-wish-roll-richkobe-<版本>-windows-x64-portable.zip Windows 便携版
 name: build-artifacts
 
 on:
@@ -57,7 +57,7 @@ jobs:
         shell: pwsh
         run: |
           $v = "${{ steps.ver.outputs.version }}"
-          $out = "genshin-wish-roll-$v-web.zip"
+          $out = "genshin-wish-roll-richkobe-$v-web.zip"
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\dist", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
           Write-Host "已生成 $out"
@@ -78,7 +78,7 @@ jobs:
         run: |
           $v = "${{ steps.ver.outputs.version }}"
           $src = "release\win-unpacked"
-          $out = "genshin-wish-roll-$v-windows-x64-portable.zip"
+          $out = "genshin-wish-roll-richkobe-$v-windows-x64-portable.zip"
           if (-not (Test-Path $src)) { throw "未找到 $src，electron-builder 可能未产出便携目录" }
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\$src", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
@@ -90,7 +90,7 @@ jobs:
         shell: pwsh
         run: |
           $v = "${{ steps.ver.outputs.version }}"
-          $target = "genshin-wish-roll-$v-windows-x64-setup.exe"
+          $target = "genshin-wish-roll-richkobe-$v-windows-x64-setup.exe"
           $found = Get-ChildItem -Path release -Filter "*setup*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($found -and $found.Name -ne $target) {
             Move-Item -Path $found.FullName -Destination "release\$target"
@@ -106,8 +106,8 @@ jobs:
         with:
           name: release-artifacts
           path: |
-            genshin-wish-roll-${{ steps.ver.outputs.version }}-web.zip
-            release/genshin-wish-roll-${{ steps.ver.outputs.version }}-windows-x64-setup.exe
-            genshin-wish-roll-${{ steps.ver.outputs.version }}-windows-x64-portable.zip
+            genshin-wish-roll-richkobe-${{ steps.ver.outputs.version }}-web.zip
+            release/genshin-wish-roll-richkobe-${{ steps.ver.outputs.version }}-windows-x64-setup.exe
+            genshin-wish-roll-richkobe-${{ steps.ver.outputs.version }}-windows-x64-portable.zip
           if-no-files-found: error
           retention-days: 30

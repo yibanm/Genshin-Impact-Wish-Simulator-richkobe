@@ -23,3 +23,14 @@ yarn-debug.log*
 yarn-error.log*
 
 ads.txt
+# electron-builder 本地产物，不入库
+release/
+# 临时文件
+.blob-url.txt
+.cirun*.json
+.ci*.json
+.art*.json
+.patch-resp.json
+.repo-check.json
+build-out.log
+eb-local.log

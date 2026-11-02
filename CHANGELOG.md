@@ -32,9 +32,9 @@
 
 ### 安装说明
 
-1. Windows 安装版：下载 `genshin-wish-roll-1.0.0-windows-x64-setup.exe`，双击运行，可选择安装目录，安装后从开始菜单或桌面快捷方式启动
-2. Windows 便携版：下载 `genshin-wish-roll-1.0.0-windows-x64-portable.zip`，解压到任意目录，运行其中的 `原神抽卡点名器.exe` 即可，无需安装
-3. Web 版：下载 `genshin-wish-roll-1.0.0-web.zip`，解压后部署到任意静态文件服务器
+1. Windows 安装版：下载 `genshin-wish-roll-richkobe-1.0.0-windows-x64-setup.exe`，双击运行，可选择安装目录，安装后从开始菜单或桌面快捷方式启动
+2. Windows 便携版：下载 `genshin-wish-roll-richkobe-1.0.0-windows-x64-portable.zip`，解压到任意目录，运行其中的 `原神抽卡点名器.exe` 即可，无需安装
+3. Web 版：下载 `genshin-wish-roll-richkobe-1.0.0-web.zip`，解压后部署到任意静态文件服务器
 
 系统要求：Windows 10 及以上 64 位。应用数据保存在本机（桌面版在用户数据目录，Web 版在浏览器本地存储），不上传任何信息。
 

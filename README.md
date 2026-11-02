@@ -49,9 +49,9 @@
 
 | 平台 | 文件 | 安装方式 |
 |---|---|---|
-| Windows | `genshin-wish-roll-<版本>-windows-x64-setup.exe` | 双击安装，可选安装目录，带开始菜单快捷方式与卸载项 |
-| Windows | `genshin-wish-roll-<版本>-windows-x64-portable.zip` | 解压即用，无需安装，适合 U 盘携带 |
-| 任意平台 | `genshin-wish-roll-<版本>-web.zip` | 解压后部署到任意静态服务器（不能直接双击 index.html，需经 HTTP 访问） |
+| Windows | `genshin-wish-roll-richkobe-<版本>-windows-x64-setup.exe` | 双击安装，可选安装目录，带开始菜单快捷方式与卸载项 |
+| Windows | `genshin-wish-roll-richkobe-<版本>-windows-x64-portable.zip` | 解压即用，无需安装，适合 U 盘携带 |
+| 任意平台 | `genshin-wish-roll-richkobe-<版本>-web.zip` | 解压后部署到任意静态服务器（不能直接双击 index.html，需经 HTTP 访问） |
 
 系统要求：Windows 10 及以上（64 位）。桌面版数据保存在用户目录，卸载不影响；Web 版数据保存在浏览器本地存储。
 
