@@ -1,0 +1,67 @@
+{
+  "name": "genshin-wish-roll",
+  "description": "原神抽卡点名器 — 中文魔改版（多名单点名 + 全中文界面）",
+  "version": "1.0.0",
+  "author": {
+    "name": "richkobe"
+  },
+  "repository": {
+    "url": "https://github.com/AguzzTN54/Genshin-Impact-Wish-Simulator"
+  },
+  "license": "MIT",
+  "homepage": "https://wishsimulator.app",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+    "lint": "prettier --plugin-search-dir . --check . && eslint .",
+    "format": "prettier --plugin-search-dir . --write .",
+    "electron:start": "electron .",
+    "dist:win": "electron-builder --config electron-builder.yml --win"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@sveltejs/adapter-static": "2.0.3",
+    "@sveltejs/kit": "1.30.4",
+    "autoprefixer": "^10.4.8",
+    "dotenv": "^16.3.1",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-svelte3": "^4.0.0",
+    "postcss": "^8.4.16",
+    "postcss-load-config": "^4.0.1",
+    "postcss-nested": "^5.0.6",
+    "prettier": "^2.6.2",
+    "prettier-plugin-svelte": "^2.7.0",
+    "svelte": "3.59.2",
+    "svelte-check": "^2.9.2",
+    "svelte-preprocess": "5.1.4",
+    "uuid": "^9.0.0",
+    "vite": "4.5.14",
+    "vite-imagetools": "^6.2.3",
+    "vite-plugin-pwa": "0.17.5",
+    "workbox-cacheable-response": "^6.5.4",
+    "workbox-core": "^6.5.4",
+    "workbox-precaching": "^6.5.4",
+    "workbox-routing": "^6.5.4"
+  },
+  "dependencies": {
+    "file-saver": "^2.0.5",
+    "hotkeys-js": "^3.12.0",
+    "howler": "^2.2.3",
+    "html-to-image": "^1.8.5",
+    "idb": "^6.1.2",
+    "marked": "12.0.2",
+    "overlayscrollbars": "^1.13.1",
+    "svelte-i18n": "^3.4.0",
+    "zoomist": "^2.0.10"
+  },
+  "main": "electron/main.cjs",
+  "allowScripts": {
+    "electron@45.2.1": true
+  }
+}

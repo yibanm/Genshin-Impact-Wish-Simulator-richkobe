@@ -1,0 +1,147 @@
+<script>
+	import { getContext, onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
+	import OverlayScrollbars from 'overlayscrollbars';
+
+	import { data } from '$lib/data/updates.json';
+	import { isPWA } from '$lib/store/app-stores';
+	import { browserDetect } from '$lib/helpers/mobileDetect';
+	import { playSfx } from '$lib/helpers/audio/audio';
+	import Modal from '$lib/components/ModalTpl.svelte';
+
+	// 中文魔改版：已移除上游的付费激活码校验（adKey / verifyKey）与赞赏入口，
+	// 本弹窗只保留「更新公告」职责，因此不再读取激活码，也不再有 key 过期提示分支。
+	let content;
+	let contentHeight;
+
+	const startApp = getContext('startApp');
+	const updates = data.filter(({ featured }) => !!featured);
+
+	onMount(() => {
+		OverlayScrollbars(content, { sizeAutoCapable: false, className: 'os-theme-light' });
+	});
+
+	const handleConfirm = () => {
+		playSfx();
+		startApp();
+	};
+</script>
+
+<Modal confirmOnly title={$t('title')} on:confirm={handleConfirm}>
+	<section bind:clientHeight={contentHeight} style="--modalHeight:{contentHeight}px">
+		<p class="sp">
+			{$t('fanmade')} <br />
+			{#if !$isPWA}
+				<a href="/install">{$t('installInstruction')}</a>
+			{/if}
+		</p>
+		{#if !browserDetect().isSupported && isPWA}
+			<div class="updates browserNote">
+				<strong>
+					<!-- 原为硬编码英文，此处改为走语言包 -->
+					{@html $t('menu.recommendChrome')}
+				</strong>
+			</div>
+		{:else}
+			<div class="updates" bind:this={content}>
+				{#each updates.reverse() as { description, date }, i (i)}
+					<span>
+						<i class="tgl"> {date} </i>
+						{#if i === 0} {$t('menu.latestUpdate')} {/if}
+					</span>
+					{#each description as txt} <p>{@html txt}</p> {/each}
+				{/each}
+				<div style="height: .5rem" />
+			</div>
+		{/if}
+		<p class="credit">{$t('disclaimer')}</p>
+	</section>
+</Modal>
+
+<style>
+	section {
+		width: 100%;
+		height: 100%;
+		padding: 0 1.5rem;
+	}
+	.credit {
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-size: 0.9rem;
+	}
+
+	.updates {
+		text-align: left;
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		background-color: #fff;
+		font-size: 0.97rem;
+		height: calc(0.7 * var(--modalHeight));
+		padding: 0 1rem;
+		display: block;
+		overflow: hidden;
+	}
+
+	:global(.mobile) .updates {
+		height: calc(0.6 * var(--modalHeight));
+	}
+
+	.browserNote {
+		text-align: center;
+		font-size: 125%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.updates span {
+		font-weight: bold;
+		color: #f7cf33;
+		display: block;
+		padding-top: 0.5rem;
+	}
+	.updates .tgl {
+		color: #bd6932;
+	}
+
+	.updates :global(a) {
+		color: #f29f0f;
+	}
+	.updates :global(a:hover) {
+		text-decoration: underline;
+	}
+	.updates p {
+		padding-left: 1rem;
+		position: relative;
+		line-height: 1rem;
+		margin: 0.5rem 0;
+	}
+	.updates p::before {
+		content: '*';
+		display: inline-block;
+		width: 10px;
+		line-height: 0;
+		font-size: 1.3rem;
+		padding-top: 0.5rem;
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.sp {
+		font-size: 0.9rem;
+		padding: 0rem 0 0.5rem;
+	}
+
+	a {
+		transition: all 0.2s;
+	}
+	.sp a {
+		font-weight: bold;
+		color: #e3a023;
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	}
+
+	a:active {
+		transform: scale(0.9);
+	}
+</style>

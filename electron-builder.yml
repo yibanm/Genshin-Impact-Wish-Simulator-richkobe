@@ -1,0 +1,45 @@
+# electron-builder 配置（中文魔改版）
+# 产物命名遵循 CLAUDE.md 0.10 规范：软件名-版本-平台.扩展名
+appId: com.richkobe.genshinwishroll
+productName: 原神抽卡点名器
+copyright: 基于 Genshin Impact Wish Simulator（MIT）二次开发；游戏素材版权归 miHoYo / HoYoverse 所有
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - electron/**/*
+  - package.json
+
+# 前端构建产物（npm run build 生成的 dist/）作为额外资源打进安装包。
+# 不放进 asar 是因为体积大（约 120M）且无需被 Node require，
+# 放 resources 下可让主进程直接用 fs 读取、loadFile 加载。
+extraResources:
+  - from: dist
+    to: dist
+    filter:
+      - '**/*'
+
+asar: true
+
+win:
+  target:
+    # 安装版：NSIS
+    - target: nsis
+      arch: [x64]
+    # 便携版：免安装目录，CI 里再压成 zip
+    - target: dir
+      arch: [x64]
+  artifactName: genshin-wish-roll-${version}-windows-x64-setup.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  # 覆盖安装：同版本直接替换，保留用户本地数据（数据在用户目录，不随卸载删除）
+  deleteAppDataOnUninstall: false
+  shortcutName: 原神抽卡点名器
+  language: 2052
+
+# 便携版 zip 由 CI 脚本压缩 win-unpacked 目录生成，
+# 命名为 genshin-wish-roll-<版本>-windows-x64-portable.zip（见 workflow）

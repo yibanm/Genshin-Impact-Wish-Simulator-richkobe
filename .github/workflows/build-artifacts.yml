@@ -1,0 +1,107 @@
+# 中文魔改版云端构建（GitHub Actions）
+#
+# 遵循 CLAUDE.md 0.11：推开发分支触发构建，产物上传为 workflow artifact，
+# 由本地用 `gh run download` 拉回 dist-release/ 供用户测试；
+# 未经用户明确指示，不合并主干、不打 tag、不创建 Release。
+#
+# 产物命名遵循 CLAUDE.md 0.10（软件名-版本-平台.扩展名）：
+#   - genshin-wish-roll-<版本>-web.zip                  Web 静态站
+#   - genshin-wish-roll-<版本>-windows-x64-setup.exe    Windows 安装版（NSIS）
+#   - genshin-wish-roll-<版本>-windows-x64-portable.zip Windows 便携版
+name: build-artifacts
+
+on:
+  push:
+    branches: [dev, build, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build web bundle (SvelteKit static)
+        run: npm run build
+        env:
+          # .env 被 gitignore（含占位密钥），CI 用环境变量注入品牌文案；
+          # Vite 的 loadEnv 会读取 process.env 中 VITE_ 前缀变量
+          VITE_HOST: ''
+          VITE_APP_TITLE: 原神抽卡点名器
+          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文魔改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
+          VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
+
+      - name: Read version from package.json
+        id: ver
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      # Web 静态站：把 dist 压成 zip
+      - name: Package web zip
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $out = "genshin-wish-roll-$v-web.zip"
+          Compress-Archive -Path dist\* -DestinationPath $out -CompressionLevel Optimal
+          Write-Host "已生成 $out"
+
+      # Electron 桌面版：安装版 exe + 便携目录
+      # --publish never 必需：electron-builder 检测到 CI 环境会隐式触发 publish，
+      # 无发布凭据时直接 exit 1（run 41365965421 的失败原因）
+      - name: Build Electron app
+        run: npx electron-builder --config electron-builder.yml --win --publish never
+        env:
+          # CI 无 GUI 凭据弹窗，electron-builder 不需要签名证书即可产出未签名包
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      # 便携版：把 win-unpacked 目录压成 zip，按 0.10 规范命名
+      - name: Package portable zip
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $src = "release\win-unpacked"
+          $out = "genshin-wish-roll-$v-windows-x64-portable.zip"
+          if (-not (Test-Path $src)) { throw "未找到 $src，electron-builder 可能未产出便携目录" }
+          Compress-Archive -Path "$src\*" -DestinationPath $out -CompressionLevel Optimal
+          Write-Host "已生成 $out"
+
+      # 安装版 exe 重命名对齐 0.10 规范（electron-builder 的 artifactName 已含 setup，
+      # 这里做一次兜底改名，确保文件名与规范逐字一致）
+      - name: Normalize setup exe name
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $target = "genshin-wish-roll-$v-windows-x64-setup.exe"
+          $found = Get-ChildItem -Path release -Filter "*setup*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($found -and $found.Name -ne $target) {
+            Move-Item -Path $found.FullName -Destination "release\$target"
+            Write-Host "已重命名 $($found.Name) -> $target"
+          } elseif ($found) {
+            Write-Host "名称已符合规范: $target"
+          } else {
+            throw "release 目录下未找到安装版 exe"
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            genshin-wish-roll-${{ steps.ver.outputs.version }}-web.zip
+            release/genshin-wish-roll-${{ steps.ver.outputs.version }}-windows-x64-setup.exe
+            genshin-wish-roll-${{ steps.ver.outputs.version }}-windows-x64-portable.zip
+          if-no-files-found: error
+          retention-days: 30
