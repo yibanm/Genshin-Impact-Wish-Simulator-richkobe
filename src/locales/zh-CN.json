@@ -23,7 +23,7 @@
 	"confirmButton": "确认",
 	"cancelButton": "取消",
 	"disclaimer": "本网站使用的所有资源均归米哈游所有。",
-	"fanmade": "这是一个粉丝制作的应用，尽情享受吧！",
+	"fanmade": "本项目由 richkobe 魔改",
 	"pressToContinue": "点击空白区域继续",
 	"installInstruction": "安装到主屏幕/桌面的教程",
 	"share": "分享",
@@ -670,6 +670,10 @@
 		"txtTip": "导入 TXT：一人一行，自动去空行；支持 UTF-8 与 GBK 编码",
 		"txtImported": "已从{name}导入 {count} 个名字",
 		"txtReadFailed": "读取文件失败：{error}",
-		"txtEmptyFile": "文件里没有可识别的名字（需一人一行）"
+		"txtEmptyFile": "文件里没有可识别的名字（需一人一行）",
+		"groupChar": "角色名单",
+		"groupWeapon": "武器名单",
+		"groupCustom": "我的名单",
+		"groupSelectAll": "全选本组"
 	}
 }

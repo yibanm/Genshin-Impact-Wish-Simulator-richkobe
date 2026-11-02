@@ -23,7 +23,7 @@
 	"confirmButton": "Confirm",
 	"cancelButton": "Cancel",
 	"disclaimer": "All assets used in this site are owned by miHoYo.",
-	"fanmade": "This is purely a fan made Application, enjoy it !",
+	"fanmade": "Modded by richkobe",
 	"pressToContinue": "Press anywhere in the blank area to continue",
 	"installInstruction": "Instructions to Install to Home Screen/Desktop",
 	"share": "Share",
@@ -615,5 +615,11 @@
 			"Unlimited Custom Banners",
 			"You can use the same key for {HSRWishSim} to get the same benefits"
 		]
+	},
+	"rollcall": {
+		"groupChar": "Character lists",
+		"groupWeapon": "Weapon lists",
+		"groupCustom": "My lists",
+		"groupSelectAll": "Select all in group"
 	}
 }

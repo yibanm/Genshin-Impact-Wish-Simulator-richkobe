@@ -37,6 +37,35 @@
 	$: rc = $rollcallStore;
 	$: lists = rc?.lists || [];
 	$: selected = rc?.selected || [];
+
+	// 分组：角色名单 / 武器名单 / 我的名单（自定义）。
+	// 池子来源不同（角色池、武器池、自导入池），分组展示更贴合「不同池子」的心智模型。
+	const groupOf = (list) => {
+		if (!list.builtin) return 'custom';
+		if (list.id.includes('char')) return 'char';
+		if (list.id.includes('weapon')) return 'weapon';
+		return 'char';
+	};
+	const groupMeta = [
+		{ key: 'char', labelKey: 'rollcall.groupChar' },
+		{ key: 'weapon', labelKey: 'rollcall.groupWeapon' },
+		{ key: 'custom', labelKey: 'rollcall.groupCustom' }
+	];
+	$: grouped = groupMeta
+		.map((g) => ({ ...g, items: lists.filter((l) => groupOf(l) === g.key) }))
+		.filter((g) => g.items.length > 0);
+
+	// 整组勾选/取消：组内全选或全不选
+	const toggleGroup = (group) => {
+		const ids = group.items.map((l) => l.id);
+		const allOn = ids.every((id) => selected.includes(id));
+		ids.forEach((id) => {
+			const isOn = selected.includes(id);
+			if (allOn && isOn) toggleSelect(id);
+			else if (!allOn && !isOn) toggleSelect(id);
+		});
+		pushToast({ message: $t('rollcall.poolReset'), type: '' });
+	};
 	// 正在编辑的名单 id，默认指向第一个已勾选的名单，没有则指向第一个名单
 	let editingId = '';
 	$: if (!editingId || !lists.some((l) => l.id === editingId)) {
@@ -164,37 +193,47 @@
 		{#if !lists.length}
 			<div class="empty">{$t('rollcall.noLists')}</div>
 		{:else}
-			<ul class="list-group">
-				{#each lists as list (list.id)}
-					<li class="list-row" class:editing={editingId === list.id}>
-						<div class="row-main" on:click={() => openEditor(list.id)} on:keydown={() => {}} role="button" tabindex="0">
-							<span class="label" class:preset={list.builtin}>
-								{list.label}
-							</span>
-							<span class="count">{$t('rollcall.memberCount', { values: { count: list.count } })}</span>
-						</div>
+			{#each grouped as group (group.key)}
+				<div class="group">
+					<div class="group-head">
+						<span class="group-label">{$t(group.labelKey)}</span>
+						<button class="link-btn" on:click={() => toggleGroup(group)}>
+							{$t('rollcall.groupSelectAll')}
+						</button>
+					</div>
+					<ul class="list-group">
+						{#each group.items as list (list.id)}
+							<li class="list-row" class:editing={editingId === list.id}>
+								<div class="row-main" on:click={() => openEditor(list.id)} on:keydown={() => {}} role="button" tabindex="0">
+									<span class="label" class:preset={list.builtin}>
+										{list.label}
+									</span>
+									<span class="count">{$t('rollcall.memberCount', { values: { count: list.count } })}</span>
+								</div>
 
-						<div class="row-side">
-							<CheckBox
-								id={list.id}
-								checked={selected.includes(list.id)}
-								on:change={() => handleToggle(list.id)}
-							>
-								{$t('rollcall.enable')}
-							</CheckBox>
+								<div class="row-side">
+									<CheckBox
+										id={list.id}
+										checked={selected.includes(list.id)}
+										on:change={() => handleToggle(list.id)}
+									>
+										{$t('rollcall.enable')}
+									</CheckBox>
 
-							{#if !list.builtin}
-								<button class="icon-btn" title={$t('rollcall.renameList')} on:click={() => openRename(list)}>
-									<i class="gi-pen" />
-								</button>
-								<button class="icon-btn danger" title={$t('rollcall.deleteList')} on:click={() => askDelete(list)}>
-									<i class="gi-delete" />
-								</button>
-							{/if}
-						</div>
-					</li>
-				{/each}
-			</ul>
+									{#if !list.builtin}
+										<button class="icon-btn" title={$t('rollcall.renameList')} on:click={() => openRename(list)}>
+											<i class="gi-pen" />
+										</button>
+										<button class="icon-btn danger" title={$t('rollcall.deleteList')} on:click={() => askDelete(list)}>
+											<i class="gi-delete" />
+										</button>
+									{/if}
+								</div>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/each}
 		{/if}
 	</div>
 
@@ -315,6 +354,27 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+	}
+
+	/* 分组：角色 / 武器 / 我的名单 */
+	.group {
+		margin-bottom: 0.6rem;
+	}
+
+	.group-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.15rem 0.2rem 0.25rem;
+		border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+		margin-bottom: 0.2rem;
+	}
+
+	.group-label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: rgba(0, 0, 0, 0.6);
+		letter-spacing: 0.05em;
 	}
 
 	.list-row {

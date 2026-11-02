@@ -95,17 +95,41 @@
 			{/if}
 
 			<button class="help" on:click={handleMenu} title="设置" aria-label="设置">
-				<i class="gi-help" />
+				<i class="gi-gear" />
 			</button>
 
 			{#if !$isPWA || !$isMobile}
 				<button
 					class="fullscreen"
 					on:click={handleFullscreen}
-					title="全屏"
-					aria-label="全屏"
+					title={fullscreen ? '退出全屏' : '全屏'}
+					aria-label={fullscreen ? '退出全屏' : '全屏'}
 				>
-					<i class="gi-{!fullscreen ? 'fullscreen' : 'shrink'}" />
+					<!-- 图标字体里没有标准的全屏字形（原 gi-fullscreen 形似「外部链接」易误读），
+					     改用内联 SVG 的四角括号：展开=进入全屏，收拢=退出全屏 -->
+					{#if !fullscreen}
+						<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+							<path
+								d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+					{:else}
+						<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+							<path
+								d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+					{/if}
 				</button>
 			{/if}
 		</h1>

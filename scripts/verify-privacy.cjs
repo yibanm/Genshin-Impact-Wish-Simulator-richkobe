@@ -1,23 +1,25 @@
 // 隐私止损验证：用真实姓名做搜索锚点，但只输出命中计数，绝不打印姓名明文。
-// 锚点从 git 历史里取（工作区文件已删除），验证构建产物 dist/ 与源码中是否还有残留。
+// 锚点从 git 历史取（工作区文件已删除）。
+// 用法：node verify-privacy.cjs [锚点ref，默认 2a42f99]
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const distDir = path.join(root, 'dist');
+const ANCHOR = process.argv[2] || '2a42f99';
 
-// 从 git 历史取原名单（HEAD 上该文件还存在），不打印内容
+// 从 git 历史取原名单（工作区与 HEAD 均已删除），不打印内容
 let names = [];
 try {
-	const raw = execSync('git show HEAD:src/lib/data/rollcall-class.json', {
+	const raw = execSync(`git show ${ANCHOR}:src/lib/data/rollcall-class.json`, {
 		cwd: root,
 		encoding: 'utf8',
 		stdio: ['pipe', 'pipe', 'pipe']
 	});
 	names = JSON.parse(raw).names || [];
 } catch (e) {
-	console.log('无法从 git 历史取到原名单：' + e.message);
+	console.log('无法从 git 历史取到原名单（锚点 ' + ANCHOR + '）：' + e.message);
 	process.exit(1);
 }
 

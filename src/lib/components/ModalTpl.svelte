@@ -98,12 +98,14 @@
 		left: 0;
 		width: 100vw;
 		height: var(--screen-height);
-		background-color: rgba(0, 0, 0, 0.5);
+		/* 遮罩加深：弹窗叠在菜单页（本身是半透明米色面板）上时，
+		   过浅的遮罩会让底层文字透上来，视觉上像「文字重叠」 */
+		background-color: rgba(0, 0, 0, 0.62);
 		z-index: 997;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		backdrop-filter: blur(2px);
+		backdrop-filter: blur(3px);
 	}
 
 	.modal-content {
