@@ -50,12 +50,16 @@ jobs:
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       # Web 静态站：把 dist 压成 zip
+      # 必须用 .NET ZipFile 而非 Compress-Archive：后者写入反斜杠路径分隔符，
+      # Linux/macOS 的 unzip 会解成一堆带反斜杠的平铺文件名（目录结构丢失），
+      # 与 README「任意平台可用」矛盾。ZipFile 写标准正斜杠分隔符。
       - name: Package web zip
         shell: pwsh
         run: |
           $v = "${{ steps.ver.outputs.version }}"
           $out = "genshin-wish-roll-$v-web.zip"
-          Compress-Archive -Path dist\* -DestinationPath $out -CompressionLevel Optimal
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\dist", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
           Write-Host "已生成 $out"
 
       # Electron 桌面版：安装版 exe + 便携目录
@@ -68,6 +72,7 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
       # 便携版：把 win-unpacked 目录压成 zip，按 0.10 规范命名
+      # 同 web zip：用 .NET ZipFile 保证正斜杠分隔符，跨平台可解
       - name: Package portable zip
         shell: pwsh
         run: |
@@ -75,7 +80,8 @@ jobs:
           $src = "release\win-unpacked"
           $out = "genshin-wish-roll-$v-windows-x64-portable.zip"
           if (-not (Test-Path $src)) { throw "未找到 $src，electron-builder 可能未产出便携目录" }
-          Compress-Archive -Path "$src\*" -DestinationPath $out -CompressionLevel Optimal
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\$src", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
           Write-Host "已生成 $out"
 
       # 安装版 exe 重命名对齐 0.10 规范（electron-builder 的 artifactName 已含 setup，
