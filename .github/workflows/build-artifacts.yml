@@ -206,6 +206,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download windows artifacts
         uses: actions/download-artifact@v4
         with:
@@ -221,8 +224,14 @@ jobs:
       - name: Read version
         id: ver
         run: |
-          EXE=$(ls win/*-windows-x64-setup.exe | head -1)
+          EXE=$(ls win/release/*-windows-x64-setup.exe | head -1)
           V=$(echo "$EXE" | sed -E 's/.*richkobe-([0-9]+\.[0-9]+\.[0-9]+)-windows.*/\1/')
+          # 版本提取失败必须立即红，否则会创建出 refs/tags/v 这种游离 tag
+          if [ -z "$V" ] || [ "$V" = "$EXE" ]; then
+            echo "FAIL: 从 exe 文件名提取版本失败，EXE=$EXE"
+            ls -R win | head -20
+            exit 1
+          fi
           echo "version=$V" >> "$GITHUB_OUTPUT"
           echo "版本: $V"
 
