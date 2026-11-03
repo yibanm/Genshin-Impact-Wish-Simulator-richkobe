@@ -1,6 +1,6 @@
 ## 隐私政策
 
-「原神抽卡点名器」是基于开源项目 [Genshin Impact Wish Simulator](https://github.com/Mantan21/Genshin-Impact-Wish-Simulator)（MIT 协议）二次开发的中文魔改版本，可完全离线使用。
+「原神抽卡点名器」是基于开源项目 [Genshin Impact Wish Simulator](https://github.com/Mantan21/Genshin-Impact-Wish-Simulator)（MIT 协议）二次开发的中文修改版本，可完全离线使用。
 
 本页面用于说明本应用如何处理你的数据。
 
@@ -10,7 +10,7 @@
 
 所有数据（祈愿记录、保底计数、余额、自定义卡池、点名名单、设置项）都只保存在你本机的浏览器存储中（LocalStorage 与 IndexedDB）。应用没有服务端，不会把任何数据发送到网络上的任何地址。
 
-中文魔改版已移除上游版本中的全部第三方服务，包括：
+中文修改版已移除上游版本中的全部第三方服务，包括：
 
 - 广告（Google AdSense、Adcash）
 - 赞赏与付费激活码校验（Ko-fi、Trakteer、Saweria）

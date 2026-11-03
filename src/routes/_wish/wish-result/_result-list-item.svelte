@@ -26,7 +26,7 @@
 		useOutfit,
 		outfitName,
 		custom,
-		// 中文魔改版：点名结果的图标与名单名字
+		// 中文修改版：点名结果的图标与名单名字
 		iconUrl,
 		chineseChar,
 		iconType
@@ -45,7 +45,7 @@
 	<div class="zoomist-container item-body {weaponType || ''}">
 		<div class="zoomist-wrapper item-content" style="--bg: url({$assets['resultcard-bg.webp']})">
 			{#if type === 'member'}
-				<!-- 中文魔改版：点名结果。有图标显示图标，无图标显示姓名首字 -->
+				<!-- 中文修改版：点名结果。有图标显示图标，无图标显示姓名首字 -->
 				<div class="zoomist-image member-cell">
 					{#if iconUrl}
 						<img src={iconUrl} alt={chineseChar || name} class="wishpic member-pic" />
@@ -84,7 +84,7 @@
 
 			<div class="info" in:fade={{ delay: 1000 }}>
 				{#if type === 'member'}
-					<!-- 中文魔改版：点名的核心信息是名字，十连列表必须显示 -->
+					<!-- 中文修改版：点名的核心信息是名字，十连列表必须显示 -->
 					<div class="member-name">{memberDisplayName({ name, chineseChar, iconType }, $t)}</div>
 				{/if}
 				<div class="icon" style="width: 100%;">
@@ -236,7 +236,7 @@
 		height: 100%;
 	}
 
-	/* 中文魔改版：点名结果单元格 */
+	/* 中文修改版：点名结果单元格 */
 	.member-cell {
 		width: 100%;
 		height: 100%;

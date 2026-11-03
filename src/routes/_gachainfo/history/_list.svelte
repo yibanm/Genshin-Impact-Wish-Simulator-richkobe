@@ -72,7 +72,7 @@
 								<span class="status"> <i class="gi-{status}" /> </span>
 							{/if}
 						</div>
-						<!-- 中文魔改版：点名记录的类型走专用文案，其余沿用原游戏物品类型翻译 -->
+						<!-- 中文修改版：点名记录的类型走专用文案，其余沿用原游戏物品类型翻译 -->
 						<div class="cell cell1">{type === 'member' ? $t('history.member') : $t(type)}</div>
 						{#if custom}
 							<div class="cell cell2 star{rarity}">

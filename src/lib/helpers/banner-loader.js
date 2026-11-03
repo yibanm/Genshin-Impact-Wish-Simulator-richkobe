@@ -94,13 +94,13 @@ export const initializeBanner = async ({ patch, phase }) => {
 		if (chronicled) list.push({ type: 'chronicled', stdver, ...chronicled });
 		list.push({ type: 'standard', stdver, ...stdFeatured });
 
-		// 中文魔改版：点名卡池。放在列表末尾，与其它卡池同级，
-		// 复用常驻祈愿的卡面立绘（stdFeatured.bannerName），视觉保持一致。
-		// 抽到的不是游戏角色，而是名单里的人（见 rollcall/draw.js）。
+		// 中文修改版：点名卡池。放在列表末尾，与其它卡池同级。
+		// 专用海报 rollcall-poster（星空+主星合成图，不贴常驻海报）；
+		// 标签图标在 _banner-button 的 member 分支单独取 rollcall-tab。
 		list.push({
 			type: 'member',
 			stdver,
-			bannerName: stdFeatured?.bannerName || '',
+			bannerName: 'rollcall-poster',
 			character: stdFeatured?.character || ''
 		});
 
@@ -108,7 +108,10 @@ export const initializeBanner = async ({ patch, phase }) => {
 		isFatepointSystem.set(!!weapons.fatepointsystem);
 
 		activeVersion.set({ patch, phase });
-		activeBanner.set(0);
+		// 默认停在第一个角色活动祈愿卡池（用户要求）：新手祈愿存在时它在 index 1，
+		// 不存在时在 index 0；找不到角色活动池才回退 0
+		const firstCharEvent = list.findIndex((b) => b.type === 'character-event');
+		activeBanner.set(firstCharEvent >= 0 ? firstCharEvent : 0);
 		localConfig.set('version', `${patch}-${phase}`);
 
 		customData.set({});

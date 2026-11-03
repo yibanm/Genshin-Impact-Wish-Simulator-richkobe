@@ -98,7 +98,7 @@ const manifest = {
 	launch_handler: {
 		client_mode: ['focus-existing', 'auto']
 	},
-	// 中文魔改版：移除了 Google Play TWA 声明（本项目不发布安卓 App，原链接指向作者的商店页）
+	// 中文修改版：移除了 Google Play TWA 声明（本项目不发布安卓 App，原链接指向作者的商店页）
 	edge_side_panel: {
 		preferred_width: 412
 	}

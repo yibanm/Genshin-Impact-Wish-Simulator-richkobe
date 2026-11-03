@@ -4,7 +4,7 @@ const fs = require('fs');
 const { pathToFileURL: toFileURL } = require('url');
 
 /**
- * 原神抽卡点名器 —— Electron 主进程（中文魔改版）
+ * 原神抽卡点名器 —— Electron 主进程（中文修改版）
  *
  * 加载方式说明（重要）：
  * SvelteKit 的构建产物使用根路径资源引用（/internal/...、/icons.css），

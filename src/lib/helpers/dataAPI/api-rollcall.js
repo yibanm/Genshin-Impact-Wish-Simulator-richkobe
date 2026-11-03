@@ -3,7 +3,7 @@ import { AssetManager } from './api-indexeddb';
 import { builtinLists, builtinListById } from '../rollcall/presets';
 
 /**
- * 点名名单管理（中文魔改版新增功能，上游没有）
+ * 点名名单管理（中文修改版新增功能，上游没有）
  *
  * 存储分层：
  * - 名单配置与勾选状态：localStorage（同步读写，UI 响应快）

@@ -46,7 +46,7 @@ export const localBanner = {
 
 export const onlineBanner = {
 	async _postData({ action, data = {}, id }) {
-		// 中文魔改版：本版本没有配置作者后端（API_HOST 为空），自定义卡池不再支持云分享。
+		// 中文修改版：本版本没有配置作者后端（API_HOST 为空），自定义卡池不再支持云分享。
 		// 在这里直接短路，避免拼出 "/storage" 这种相对地址发出无效请求——
 		// 那既违背「完全离线」的承诺，也会在控制台留下报错噪音。
 		if (!API_HOST) return { success: false, error: 'offline' };

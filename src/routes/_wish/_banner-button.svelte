@@ -56,6 +56,15 @@
 					class="chronicled"
 					crossorigin="anonymous"
 				/>
+			{:else if type === 'member'}
+				<!-- 群星点名专用标签图标（星空主星），不复用角色头像 -->
+				<img
+					in:fade
+					on:error={(e) => e.target.remove()}
+					src={$assets['rollcall-tab']}
+					alt="Roll Call"
+					crossorigin="anonymous"
+				/>
 			{:else if type === 'weapon-event'}
 				{#each featured as { name, buttonPosition }}
 					<img

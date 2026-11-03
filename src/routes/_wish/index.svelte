@@ -21,7 +21,7 @@
 	import { pushToast } from '$lib/helpers/toast';
 	import { HistoryManager } from '$lib/helpers/dataAPI/api-indexeddb';
 	import WISH, { roll } from '$lib/helpers/gacha/Wish';
-	// 中文魔改版新增：点名（抽人名）功能
+	// 中文修改版新增：点名（抽人名）功能
 	import { drawMembers } from '$lib/helpers/rollcall/draw';
 	import { attachIconUrls } from '$lib/helpers/rollcall/icon';
 	import { refreshRollcall } from '$lib/helpers/dataAPI/api-rollcall';
@@ -34,6 +34,9 @@
 	import EpitomizedModal from './epitomized-path/EpitomizedPath.svelte';
 	import Meteor from './wish-result/_meteor.svelte';
 	import WishResult from './wish-result/WishResult.svelte';
+	// 中文修改版：名单管理浮层小窗（点名卡池「名单管理」按钮打开）
+	import RollcallPanel from './_rollcall-panel.svelte';
+	import { rollcallPanel } from '$lib/store/app-stores';
 
 	let rollCount = 0;
 	let result = [];
@@ -111,7 +114,7 @@
 		const indexOfCharBanner = bannerToRoll === 'character-event' ? getIndexOfCharBanner() : 0;
 		onWish.set(true);
 
-		// 中文魔改版：点名卡池不走游戏概率系统，改为从名单里抽人。
+		// 中文修改版：点名卡池不走游戏概率系统，改为从名单里抽人。
 		// 名单为空时不能抽，提示用户去菜单里勾选名单（复刻原版壳层的 alert 行为，
 		// 但用应用自己的 toast 组件，保持视觉一致）。
 		if (bannerToRoll === 'member') {
@@ -152,7 +155,7 @@
 	setContext('doRoll', doRoll);
 
 	const updateFatesBalance = (banner) => {
-		// 中文魔改版：点名卡池与常驻/新手一样消耗相遇之缘（点名不涉及限定角色，不该花纠缠之缘）
+		// 中文修改版：点名卡池与常驻/新手一样消耗相遇之缘（点名不涉及限定角色，不该花纠缠之缘）
 		const isAcquaint = ['beginner', 'standard', 'member'].includes(banner);
 		const funds = isAcquaint ? acquaint : intertwined;
 		funds.update((n) => {
@@ -284,6 +287,9 @@
 
 {#if openEpitomized}
 	<EpitomizedModal />
+	{#if $rollcallPanel}
+		<RollcallPanel />
+	{/if}
 {/if}
 
 {#if showConvertModal}

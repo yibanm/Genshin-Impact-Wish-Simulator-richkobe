@@ -1,4 +1,4 @@
-# 中文魔改版云端构建（GitHub Actions）
+# 中文修改版云端构建（GitHub Actions）
 #
 # 遵循 CLAUDE.md 0.11：推开发分支触发构建，产物上传为 workflow artifact，
 # 由本地用 `gh run download` 拉回 dist-release/ 供用户测试；
@@ -41,7 +41,7 @@ jobs:
           # Vite 的 loadEnv 会读取 process.env 中 VITE_ 前缀变量
           VITE_HOST: ''
           VITE_APP_TITLE: 原神抽卡点名器
-          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文魔改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
+          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文修改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
           VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
 
       - name: Read version from package.json
@@ -134,7 +134,7 @@ jobs:
         env:
           VITE_HOST: ''
           VITE_APP_TITLE: 原神抽卡点名器
-          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文魔改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
+          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文修改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
           VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
 
       - name: Setup JDK

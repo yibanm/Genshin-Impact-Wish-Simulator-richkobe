@@ -15,7 +15,7 @@
 	import BackupRestore from './BackupRestore.svelte';
 	import Rollcall from './Rollcall.svelte';
 
-	// 中文魔改版：支持从别处（如点名卡池卡面）直达指定子页；无指定时用默认页
+	// 中文修改版：支持从别处（如点名卡池卡面）直达指定子页；无指定时用默认页
 	const initialContent = () => {
 		if ($menuTarget) return $menuTarget;
 		return $editorMode ? 'customBanner' : 'options';

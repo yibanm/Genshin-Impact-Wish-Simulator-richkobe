@@ -4,7 +4,7 @@
 			"date": "2026-11-02",
 			"featured": true,
 			"description": [
-				"<strong>中文魔改版首发</strong>：基于开源项目 Genshin Impact Wish Simulator（MIT 协议）二次开发",
+				"<strong>中文修改版首发</strong>：基于开源项目 Genshin Impact Wish Simulator（MIT 协议）二次开发",
 				"<strong>新增</strong>：名单点名功能——内置五星/四星角色与武器名单（带图标）；自己的名单可导入 TXT（一人一行）或批量粘贴，导入后还能逐条改名、增删、配图标",
 				"<strong>新增</strong>：多名单混用——抽卡时可勾选一套或多套名单，多选时合并为一个池子；洗牌保证一轮内不重复点到同一人",
 				"<strong>优化</strong>：全界面中文化，含说明文档与页面标题（打开即中文，不再先英文后中文）",

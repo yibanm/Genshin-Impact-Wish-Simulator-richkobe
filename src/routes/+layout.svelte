@@ -23,7 +23,7 @@
 	import { mobileDetect } from '$lib/helpers/mobileDetect';
 	import { wakeLock } from '$lib/helpers/wakeLock';
 	import { syncCustomBanner } from '$lib/helpers/banner-custom';
-	// 中文魔改版：点名名单 store 的应用级初始化入口
+	// 中文修改版：点名名单 store 的应用级初始化入口
 	import { initRollcall } from '$lib/helpers/dataAPI/api-rollcall';
 	// import { initializeDriveAPI } from '$lib/helpers/dataAPI/google-api';
 	import '../app.css';
@@ -57,7 +57,7 @@
 		directLoad = !!path[1];
 		preview = path[1] === 'screen';
 
-		// 中文魔改版：已移除 adkey（付费激活码页）与 bnlist（在线卡池列表，依赖作者后端 API_HOST），
+		// 中文修改版：已移除 adkey（付费激活码页）与 bnlist（在线卡池列表，依赖作者后端 API_HOST），
 		// 桌面离线版无外部服务，这两个路由不再存在
 		const validPaths = ['install', 'privacy-policy', 'screen'];
 		const isPathValid = validPaths.includes(path[1].toLowerCase());
@@ -92,7 +92,7 @@
 		wakeLock(); // Prevent screen off while open the app
 		await IDBUpdater(); // Update site data to the newer Version
 		syncCustomBanner(); // Sync Custom Banner
-		// 中文魔改版：点名名单 store 在应用启动时就初始化，
+		// 中文修改版：点名名单 store 在应用启动时就初始化，
 		// 否则点名卡池卡面读不到勾选状态，会一直显示「还没有勾选任何名单」
 		initRollcall();
 		// initializeDriveAPI(); // Drive API for cloud Sync

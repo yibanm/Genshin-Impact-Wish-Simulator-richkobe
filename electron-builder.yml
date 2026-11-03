@@ -1,4 +1,4 @@
-# electron-builder 配置（中文魔改版）
+# electron-builder 配置（中文修改版）
 # 产物命名遵循 CLAUDE.md 0.10 规范：软件名-版本-平台.扩展名
 appId: com.richkobe.genshinwishroll
 productName: 原神抽卡点名器

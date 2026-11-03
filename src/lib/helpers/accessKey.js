@@ -1,7 +1,7 @@
 import { proUser, showAd } from '$lib/store/app-stores';
 import { cookie } from './dataAPI/api-cookie';
 
-// 中文魔改版说明：
+// 中文修改版说明：
 // 上游此处会通过 fetch 请求作者的 GitHub gist 校验付费激活码（去广告 + 解锁自定义卡池数量），
 // 离线时 retry() 会每 10 秒无限重试。本项目已删除赞赏/付费入口，改为全功能默认解锁，
 // 因此不再请求任何外部地址，也不再读取激活码。保留 adKey 的接口签名是为了

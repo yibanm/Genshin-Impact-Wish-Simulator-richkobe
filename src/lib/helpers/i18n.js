@@ -32,7 +32,7 @@ const itemLocales = [
 ];
 
 const checkLocale = () => {
-	// 中文魔改版：首次启动一律默认简体中文，不跟随浏览器语言
+	// 中文修改版：首次启动一律默认简体中文，不跟随浏览器语言
 	// （上游此处用 getLocaleFromNavigator()，英文系统会落到 en-US）
 	const savedLocale = browser ? localConfig.get('locale') : null;
 	if (!savedLocale) return 'zh-CN';

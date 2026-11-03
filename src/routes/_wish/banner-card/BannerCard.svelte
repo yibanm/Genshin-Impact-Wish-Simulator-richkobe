@@ -2,7 +2,7 @@
 	import { getContext, setContext } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
-	import { assets, isCustomBanner, menuTarget } from '$lib/store/app-stores';
+	import { assets, isCustomBanner, rollcallPanel } from '$lib/store/app-stores';
 	import { playSfx } from '$lib/helpers/audio/audio';
 
 	import FrameBeginner from './_frame-beginner.svelte';
@@ -43,17 +43,15 @@
 	};
 
 	const navigate = getContext('navigate');
-	const handleMenu = getContext('handleMenu');
 	const openDetails = () => {
 		navigate('details');
 		return playSfx();
 	};
 
-	// 中文魔改版：点名卡池没有概率详情可看，改为直达名单管理页。
-	// 用 menuTarget store 告诉菜单要打开哪一页（菜单本身的 handleMenu 不接受页面参数）。
+	// 中文修改版：点名卡池没有概率详情可看，改为就地弹出名单管理浮层小窗。
+	// 不再跳整页菜单——小屏/窄窗口下整页菜单会顶走抽卡画面。
 	const openRollcall = () => {
-		menuTarget.set('rollcall');
-		handleMenu();
+		rollcallPanel.set(true);
 		return playSfx();
 	};
 </script>
@@ -153,7 +151,7 @@
 				<FrameStandard {bannerName} />
 			</div>
 
-			<!-- Roll Call Banner（中文魔改版新增的点名卡池） -->
+			<!-- Roll Call Banner（中文修改版新增的点名卡池） -->
 		{:else if type === 'member'}
 			<!-- 点名没有专属美术资源，沿用常驻祈愿的卡面立绘（bannerName 由 banner-loader 指定），
 			     视觉与其它卡池保持一致 -->

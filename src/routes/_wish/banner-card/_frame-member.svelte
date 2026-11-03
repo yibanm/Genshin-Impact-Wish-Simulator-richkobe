@@ -5,7 +5,7 @@
 	import { highlightBannerName } from '$lib/helpers/nameText';
 
 	/**
-	 * 点名卡池卡面（中文魔改版新增）
+	 * 点名卡池卡面（中文修改版新增）
 	 *
 	 * 视觉沿用常驻祈愿（standard）的皮肤：同样的 .frame-content 结构、
 	 * 同样的标题描边与配色，因此和其它卡池放在一起不违和。

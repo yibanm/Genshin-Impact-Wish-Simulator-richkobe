@@ -15,8 +15,22 @@
         <item name="android:background">@null</item>
     </style>
 
-
+    <!--
+      启动主题：沉浸式 edge-to-edge。
+      - 状态栏/导航栏透明，内容铺到系统栏之下（配合 MainActivity 的
+        setDecorFitsSystemWindows(false) 与隐藏系统栏）
+      - shortEdges：横屏时允许内容延伸进挖孔/刘海区，不留黑边
+      - enforceStatusBarContrast / enforceNavigationBarContrast 关掉，
+        否则系统会为保证文字对比度自动加半透明遮罩，破坏游戏画面完整性
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
     </style>
 </resources>
