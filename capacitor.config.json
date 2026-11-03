@@ -1,0 +1,12 @@
+{
+	"appId": "com.richkobe.giws",
+	"appName": "原神抽卡点名器",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false,
+		"backgroundColor": "#ffffff"
+	}
+}

@@ -111,3 +111,78 @@ jobs:
             genshin-wish-roll-richkobe-${{ steps.ver.outputs.version }}-windows-x64-portable.zip
           if-no-files-found: error
           retention-days: 30
+
+  # 安卓移植版：Capacitor 壳打包同一份 Web 产物（完全离线，无外部服务）
+  # 签名走仓库 secrets 的主密钥（base64 + 密码），保证覆盖安装可升级
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build web bundle (SvelteKit static)
+        run: npm run build
+        env:
+          VITE_HOST: ''
+          VITE_APP_TITLE: 原神抽卡点名器
+          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文魔改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
+          VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Sync web bundle into Capacitor android project
+        run: npx cap sync android
+
+      - name: Read version from package.json
+        id: ver
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Decode signing keystore
+        env:
+          GIWS_KEYSTORE_BASE64: ${{ secrets.GIWS_KEYSTORE_BASE64 }}
+          GIWS_KEYSTORE_PASSWORD: ${{ secrets.GIWS_KEYSTORE_PASSWORD }}
+        run: |
+          echo "$GIWS_KEYSTORE_BASE64" | base64 -d > android/keystore.jks
+          # key.properties 用正斜杠路径：Java Properties 反斜杠是转义符（\r 会被解析成回车）
+          {
+            echo "storeFile=keystore.jks"
+            echo "storePassword=$GIWS_KEYSTORE_PASSWORD"
+            echo "keyAlias=richkobe"
+            echo "keyPassword=$GIWS_KEYSTORE_PASSWORD"
+          } > android/key.properties
+
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --console=plain
+
+      - name: Verify signature fingerprint
+        working-directory: android
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*-android-arm64.apk" | head -1)
+          echo "APK: $APK"
+          # 主密钥 SHA-256 指纹（CLAUDE.md 0.10），不符即失败，防止误用 debug 签名发版
+          EXPECTED="7ca63dca32db31b1de61257eeee60e883c04f660381f8f3e678b70f66d1f13b4"
+          ACTUAL=$(${ANDROID_HOME}/build-tools/36.0.0/apksigner verify --print-certs "$APK" | grep -i "SHA-256" | head -1 | sed 's/.*: //')
+          echo "实际指纹: $ACTUAL"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then echo "签名指纹与主密钥不符！"; exit 1; fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifact
+          path: android/app/build/outputs/apk/release/genshin-wish-roll-richkobe-${{ steps.ver.outputs.version }}-android-arm64.apk
+          if-no-files-found: error
+          retention-days: 30

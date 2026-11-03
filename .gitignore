@@ -34,3 +34,12 @@ release/
 .repo-check.json
 build-out.log
 eb-local.log
+android/key.properties
+
+# Android 工程：构建产物与同步素材不入库（CI 现场 npm run build + cap sync 生成）
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/app/src/main/assets/public/
+android/local.properties
