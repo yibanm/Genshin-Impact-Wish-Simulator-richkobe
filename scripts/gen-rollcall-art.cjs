@@ -1,5 +1,5 @@
 // 生成群星点名卡池的专用海报与标签图标（不贴现成常驻海报）。
-// 主视觉用游戏内「5star-special」星形素材（与「群星点名」主题最贴切），
+// 主视觉用游戏内「stella-fortuna-5star」命星素材（与「群星点名」主题最贴切；5star-special 实测是三位一体结纹样，不是星），
 // 海报 1000x574（与 standard 海报同尺寸）：星空渐变底 + 主星居右 +
 // 原石点缀；左侧留白给前端渲染标题与说明文字。
 // 标签图标 100x100：透明底主星。
@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const STAR = path.join(root, 'src/images/utility/5star-special.webp'); // 256x256
+const STAR = path.join(root, 'src/images/utility/stella-fortuna-5star.webp'); // 100x100 命星
 const PRIMOGEM = path.join(root, 'src/images/utility/primogem.webp'); // 100x100
 const OUT_DIR = path.join(root, 'src/images/banner/member');
 const POSTER = path.join(OUT_DIR, 'rollcall-poster.webp');
