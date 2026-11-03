@@ -287,9 +287,10 @@
 
 {#if openEpitomized}
 	<EpitomizedModal />
-	{#if $rollcallPanel}
-		<RollcallPanel />
-	{/if}
+{/if}
+
+{#if $rollcallPanel}
+	<RollcallPanel />
 {/if}
 
 {#if showConvertModal}
