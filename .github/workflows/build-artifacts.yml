@@ -167,7 +167,9 @@ jobs:
 
       - name: Build release APK
         working-directory: android
-        run: ./gradlew assembleRelease --console=plain
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --console=plain
 
       - name: Verify signature fingerprint
         working-directory: android
