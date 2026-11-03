@@ -156,8 +156,10 @@ jobs:
           GIWS_KEYSTORE_BASE64: ${{ secrets.GIWS_KEYSTORE_BASE64 }}
           GIWS_KEYSTORE_PASSWORD: ${{ secrets.GIWS_KEYSTORE_PASSWORD }}
         run: |
-          echo "$GIWS_KEYSTORE_BASE64" | base64 -d > android/keystore.jks
-          # key.properties 用正斜杠路径：Java Properties 反斜杠是转义符（\r 会被解析成回车）
+          # keystore 必须落在 android/app/ 下：build.gradle 的 signingConfigs 用
+          # file(keyProps['storeFile'])，相对路径以 app 模块目录为基准解析
+          echo "$GIWS_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          # key.properties 用相对名：Java Properties 反斜杠是转义符，这里无路径分隔符最稳
           {
             echo "storeFile=keystore.jks"
             echo "storePassword=$GIWS_KEYSTORE_PASSWORD"
