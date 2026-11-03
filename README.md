@@ -51,9 +51,10 @@
 |---|---|---|
 | Windows | `genshin-wish-roll-richkobe-<版本>-windows-x64-setup.exe` | 双击安装，可选安装目录，带开始菜单快捷方式与卸载项 |
 | Windows | `genshin-wish-roll-richkobe-<版本>-windows-x64-portable.zip` | 解压即用，无需安装，适合 U 盘携带 |
+| Android | `genshin-wish-roll-richkobe-<版本>-android-arm64.apk` | 允许安装未知来源后直接安装；包名 `com.richkobe.giws`，强制横屏、以游戏类别注册（可触发各厂商游戏助手/性能模式） |
 | 任意平台 | `genshin-wish-roll-richkobe-<版本>-web.zip` | 解压后部署到任意静态服务器（不能直接双击 index.html，需经 HTTP 访问） |
 
-系统要求：Windows 10 及以上（64 位）。桌面版数据保存在用户目录，卸载不影响；Web 版数据保存在浏览器本地存储。
+系统要求：Windows 10 及以上（64 位）；安卓 7.0（API 24）及以上。桌面版数据保存在用户目录，卸载不影响；Web 版数据保存在浏览器本地存储。
 
 具体下载地址见本仓库的 Release 页面。
 
