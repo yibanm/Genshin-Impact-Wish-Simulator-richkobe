@@ -123,7 +123,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Capacitor 8 的 CLI 硬性要求 Node >= 22（本地 node 24 能跑，CI 的 20 会 fatal）
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
