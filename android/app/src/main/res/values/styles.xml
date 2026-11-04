@@ -12,7 +12,12 @@
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:background">@null</item>
+        <!--
+          运行时窗口背景用 splash 图而非 @null：@null 会让 Activity 切换到
+          WebView 首帧绘制之间露出黑底（用户报的「启动黑屏一会儿」）。
+          splash 图延续启动画面观感，WebView 不透明绘制后自然盖住。
+        -->
+        <item name="android:background">@drawable/splash</item>
         <!--
           运行时主题也要带沉浸式属性：启动主题只覆盖 splash 阶段，
           Activity 起来后切到本主题，缺了这些状态栏就会重新变成不透明的一条，

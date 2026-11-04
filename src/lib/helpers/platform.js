@@ -31,18 +31,31 @@ export const isNative = () => isNativeAndroid() || isTauri() || isElectron();
 
 /**
  * 动态引入插件。
- * 必须动态 import：静态 import 会把插件打进 Web 产物，而浏览器环境下
- * 插件内部访问原生桥会抛错。失败（非原生环境 / 插件缺失）返回 null，
- * 调用方自行回退到 Web 实现。
+ * 注意：参数必须是**字面量字符串**——Vite/Rollup 在构建期静态分析 import() 的参数
+ * 来生成 chunk；传变量（import(pkg)）构建后运行时无法解析裸模块名，
+ * 插件永远加载失败并静默回退（v1.0.1 首轮导出按钮在安卓上失效的真因）。
+ * 失败（非原生环境 / 插件缺失）返回 null，调用方回退 Web 实现。
  */
-const loadPlugin = async (pkg, name) => {
-	try {
-		const mod = await import(/* @vite-ignore */ pkg);
-		return mod[name] ?? null;
-	} catch (e) {
-		return null;
-	}
-};
+const loadDialogSave = () =>
+	import('@tauri-apps/plugin-dialog')
+		.then((m) => m.save)
+		.catch(() => null);
+const loadFsWriteText = () =>
+	import('@tauri-apps/plugin-fs')
+		.then((m) => m.writeTextFile)
+		.catch(() => null);
+const loadCapFilesystem = () =>
+	import('@capacitor/filesystem')
+		.then((m) => m.Filesystem)
+		.catch(() => null);
+const loadCapShare = () =>
+	import('@capacitor/share')
+		.then((m) => m.Share)
+		.catch(() => null);
+const loadCapApp = () =>
+	import('@capacitor/app')
+		.then((m) => m.App)
+		.catch(() => null);
 
 /**
  * 退出应用。
@@ -53,10 +66,9 @@ const loadPlugin = async (pkg, name) => {
  */
 export const exitApp = async () => {
 	if (isTauri()) {
-		const getCurrent = await loadPlugin(
-			'@tauri-apps/api/webviewWindow',
-			'getCurrentWebviewWindow'
-		);
+		const getCurrent = await import('@tauri-apps/api/webviewWindow')
+			.then((m) => m.getCurrentWebviewWindow)
+			.catch(() => null);
 		try {
 			const win = getCurrent?.();
 			if (win?.close) {
@@ -69,7 +81,7 @@ export const exitApp = async () => {
 		return false;
 	}
 	if (isNativeAndroid()) {
-		const App = await loadPlugin('@capacitor/app', 'App');
+		const App = await loadCapApp();
 		if (!App) return false;
 		try {
 			await App.exitApp();
@@ -91,8 +103,8 @@ export const exitApp = async () => {
  * 从 Electron 迁到 Tauri 若不补这条路，导出功能会从「能用」变成「点了没反应」。
  */
 const saveTextFileTauri = async (text, filename) => {
-	const dialog = await loadPlugin('@tauri-apps/plugin-dialog', 'save');
-	const fs = await loadPlugin('@tauri-apps/plugin-fs', 'writeTextFile');
+	const dialog = await loadDialogSave();
+	const fs = await loadFsWriteText();
 	if (!dialog || !fs) return false;
 
 	try {
@@ -116,8 +128,8 @@ const saveTextFileTauri = async (text, filename) => {
  * （不必申请 WRITE_EXTERNAL_STORAGE）；分享面板让用户自己选去处（存文件/发微信/传电脑）。
  */
 const saveTextFileAndroid = async (text, filename) => {
-	const Filesystem = await loadPlugin('@capacitor/filesystem', 'Filesystem');
-	const Share = await loadPlugin('@capacitor/share', 'Share');
+	const Filesystem = await loadCapFilesystem();
+	const Share = await loadCapShare();
 	if (!Filesystem || !Share) return false;
 
 	try {

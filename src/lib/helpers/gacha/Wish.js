@@ -13,7 +13,7 @@ import weaponWish from './wishWeapon';
 import standardWish from './wishStandard';
 import roll from './roll';
 import chronicledWish from './wishChronicled';
-import { get5StarItem } from './itemdrop-base';
+import { get5StarItem, rand } from './itemdrop-base';
 
 const initLoadFatepoint = (version, phase) => {
 	['weapon-event', 'chronicled'].forEach((banner) => {
@@ -132,13 +132,18 @@ const WISH = {
 		const bannerName = customData.bannerName || '';
 
 		if (rarity === 5) {
-			// get5StarItem 的自定义分支条件是 useRateup && banner 匹配 character，
-			// 两个参数缺一不可，否则落到通用五星池（出官方角色而非自定义角色）
-			const result = get5StarItem({
+			// 空白卡池（无自定义角色名）不能走 custom/rateup 分支——会产出
+			// name 为 undefined 或空对象的坏结果。useRateup 置 false 落到通用五星池，
+			// 保证「空白也可用」。
+			// ⚠️ get5StarItem 的返回值有两种形态：custom/rateup 命中时是单个对象，
+			// 未命中（通用池）时是**候选数组**，必须 rand() 抽一个，不能直接当结果返回。
+			const hasCustomChar = !!customData.character;
+			const dropped = get5StarItem({
 				banner: 'character-event',
-				useRateup: true,
-				customData
+				useRateup: hasCustomChar,
+				customData: hasCustomChar ? customData : {}
 			});
+			const result = Array.isArray(dropped) ? rand(dropped) : dropped;
 			result.bannerName = bannerName;
 			return result;
 		}

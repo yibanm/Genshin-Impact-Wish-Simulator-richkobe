@@ -2,7 +2,7 @@
 	import { getContext, onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
-	import { check, loadAnimation, loadProggress } from '$lib/helpers/meteor-loader';
+	import { check, ensureMeteorAssets, loadAnimation, loadProggress } from '$lib/helpers/meteor-loader';
 	import { assets, autoskip } from '$lib/store/app-stores';
 	import { localConfig } from '$lib/helpers/dataAPI/api-localstore';
 	import { playSfx } from '$lib/helpers/audio/audio';
@@ -22,6 +22,15 @@
 	onMount(async () => {
 		const isReady = localConfig.get('autoskip') || (await check());
 		readyToPull.set(isReady);
+		// 后台静默补齐缺失的流星素材（单视频失败不影响其余）；
+		// 补齐成功后自动解锁祈愿按钮，用户不必手动点「加载」
+		if (!isReady) {
+			ensureMeteorAssets()
+				.then((ok) => {
+					if (ok) readyToPull.set(true);
+				})
+				.catch((e) => console.error('后台预载流星素材失败：', e));
+		}
 	});
 
 	const skipMeteor = () => {
@@ -34,13 +43,19 @@
 	const preloadMeteor = async () => {
 		playSfx();
 		onProgress = true;
-		const data = await loadAnimation();
-		assets.update((v) => {
-			data.forEach(({ asset, url }) => (v[asset] = url));
-			return v;
-		});
-		readyToPull.set(true);
-		onProgress = false;
+		try {
+			const data = await loadAnimation();
+			assets.update((v) => {
+				data.forEach(({ asset, url }) => (v[asset] = url));
+				return v;
+			});
+			readyToPull.set(true);
+		} catch (e) {
+			// 原实现无 catch：任一视频失败整链 throw，readyToPull 永久 false、按钮永久灰
+			console.error('手动加载流星素材失败：', e);
+		} finally {
+			onProgress = false;
+		}
 	};
 </script>
 

@@ -179,6 +179,8 @@
 			{:else}
 				<button class="detail" on:click={openDetails}> {$t('details.text')} </button>
 				{#if type !== 'beginner'}
+					<!-- 自定义池也开放概率编辑（用户要求「设置概率之类的」）：
+					     概率按 'custom' 键独立存储，与官方角色池互不影响 -->
 					<button class="gear" on:click={openRateEditor}><i class="gi-gear" /></button>
 				{/if}
 			{/if}

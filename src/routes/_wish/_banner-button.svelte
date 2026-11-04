@@ -69,13 +69,17 @@
 					crossorigin="anonymous"
 				/>
 			{:else if type === 'custom'}
-				<!-- 自定义池页签：优先用户头像缩略图，缺失时回退原石星图标 -->
+				<!-- 自定义池页签：优先用户头像缩略图，缺失时回退原石星图标。
+				     必须限宽限高：.picture 是 absolute 容器，img 也是 absolute 且无默认
+				     尺寸约束，用户上传的大图会按原始尺寸撑爆页签（实测把整条页签栏
+				     顶到无法滑动、新页签点不到）。 -->
 				{#if thumbnail}
 					<img
 						in:fade
 						on:error={(e) => e.target.remove()}
 						src={thumbnail}
 						alt="Custom Wish"
+						class="custom-thumb"
 					/>
 				{:else}
 					<i class="gi-primo-star custom-fallback" />
@@ -227,6 +231,25 @@
 	img.chronicled {
 		width: 75%;
 		top: 35%;
+	}
+
+	/* 自定义池页签缩略图：限死尺寸，防止用户大图撑爆页签（见模板注释） */
+	img.custom-thumb {
+		width: 60%;
+		max-height: 90%;
+		top: 20%;
+		object-fit: contain;
+		border-radius: 6px;
+	}
+
+	/* 无缩略图时的原石星回退图标：同样限尺寸居中 */
+	.custom-fallback {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		font-size: 1.1rem;
+		color: #ffd966;
 	}
 
 	.discount {

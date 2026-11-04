@@ -7,14 +7,13 @@ export const maintenance = false;
 
 export const localBanner = {
 	isComplete: async (itemID) => {
-		const { character, images, rateup = [], bannerName } = (await idb.get(itemID)) || {};
-		const { artURL } = images || {};
-		// C4 放宽：不再强制填完所有字段。真正必需的是「池名 + 至少一个 UP 角色」——
-		// 池名是页签与卡面的标识，rateup 是抽卡表（空则五星无物可出）。
-		// 立绘 artURL 与角色名 character 纯装饰：缺失时卡面用米金渐变占位、
-		// 页签用原石星图标兜底，不影响抽卡功能。
-		const complete = rateup.length > 0 && !!bannerName;
-		return complete;
+		const data = (await idb.get(itemID)) || {};
+		// 用户裁定（2026-11-04 二次放宽）：空白也可用——建了就能抽。
+		// 缺池名/缺 UP 角色/缺立绘全部走兜底：卡面显示默认文案与占位底色，
+		// 五星无自定义角色时回退官方五星池（Wish._customWish 的 customData 空对象分支）。
+		// 保留函数与调用点是为了 toast 链路不报错，恒返回 true。
+		void data;
+		return true;
 	},
 
 	isHostedBanner: async (itemID) => {

@@ -36,11 +36,11 @@ export const getRate = (banner, key) => {
 		return initial[key];
 	}
 
-	// 自定义卡池页签（type: 'custom'）没有独立概率表，沿用角色活动池的默认概率
-	// （与旧版「整实例 custom 模式」一致：旧版 probabilityRates['character-event'] 就是它的来源）
+	// 自定义卡池页签（type: 'custom'）没有独立默认概率表，初始值沿用角色活动池；
+	// 但用户修改存独立 'custom' 键，避免调自定义池概率时误改官方角色池。
 	const tableKey = banner === 'custom' ? 'character-event' : banner;
 	const initial = probabilityRates[tableKey];
-	const local = localrate.get(tableKey);
+	const local = localrate.get(banner);
 	if (!(local[key] || local[key] >= 0)) return initial[key] || 0;
 
 	const val = parseFloat(local[key]);

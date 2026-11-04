@@ -54,9 +54,10 @@
 	// F6：批量添加弹窗状态（复用 bulkText）
 	let bulkModal = false;
 
-	// 图标 blob → objectURL 的缓存，避免每次渲染都重新读取 IndexedDB
-	const iconUrls = new Map();
-	let loadedIcons = {};
+	// 图标 blob → objectURL 的缓存，避免每次渲染都重新读取 IndexedDB。
+	// 必须是**普通对象**而非 Map：Svelte 的响应式只追踪普通变量的重新赋值，
+	// Map.set() 不触发重渲染——曾导致「设置图标后缩略图不刷新」（用户报的 bug）。
+	let iconUrls = {};
 
 	const loadItems = async () => {
 		items = getListItems(listId);
@@ -67,25 +68,35 @@
 	const loadIcons = async () => {
 		const { getIconBlob } = await import('$lib/helpers/dataAPI/api-rollcall');
 		let changed = false;
+		const next = { ...iconUrls };
 		for (const it of items) {
-			if (!it.iconKey || iconUrls.has(it.iconKey)) continue;
+			if (!it.iconKey || next[it.iconKey]) continue;
 			try {
 				const blob = await getIconBlob(it.iconKey);
 				if (blob) {
-					iconUrls.set(it.iconKey, URL.createObjectURL(blob));
+					next[it.iconKey] = URL.createObjectURL(blob);
 					changed = true;
 				}
 			} catch (e) {
 				console.error('读取图标失败：', e);
 			}
 		}
-		if (changed) loadedIcons = {}; // 触发响应式重算
+		// 整体重新赋值才触发模板重渲染
+		if (changed) iconUrls = next;
 	};
 
 	// 每条的图标地址：用户导入的自定义图标（F3 后无预置素材分支）
 	const iconOf = (item) => {
-		if (item.iconKey) return iconUrls.get(item.iconKey) || null;
+		if (item.iconKey) return iconUrls[item.iconKey] || null;
 		return null;
+	};
+
+	// 换图/清图/删条目时作废缓存：删键后整体重赋值触发重渲染
+	const dropIconCache = (key) => {
+		if (!key || !iconUrls[key]) return;
+		const next = { ...iconUrls };
+		delete next[key];
+		iconUrls = next;
 	};
 
 	onMount(loadItems);
@@ -248,7 +259,7 @@
 		playSfx();
 		const ok = await removeMember(listId, item.uid);
 		if (!ok) return pushToast({ message: $t('rollcall.deleteFailed'), type: 'error' });
-		if (item.iconKey) iconUrls.delete(item.iconKey);
+		if (item.iconKey) dropIconCache(item.iconKey);
 		loadItems();
 	};
 
@@ -283,7 +294,7 @@
 		}
 		try {
 			await setMemberIcon(listId, item.uid, file);
-			iconUrls.delete(item.iconKey || '');
+			dropIconCache(item.iconKey || '');
 			await loadItems();
 			pushToast({ message: $t('rollcall.iconSet'), type: 'success' });
 		} catch (e) {
@@ -293,7 +304,7 @@
 
 	const handleClearIcon = async (item) => {
 		await clearMemberIcon(listId, item.uid);
-		iconUrls.delete(item.iconKey || '');
+		dropIconCache(item.iconKey || '');
 		await loadItems();
 	};
 </script>
@@ -784,6 +795,27 @@
 
 	.member:hover .ops {
 		opacity: 1;
+	}
+
+	/* 移动端（含安卓横屏）：操作按钮常驻可见 + 换行到名字下方。
+	   原布局一行排「图标+名字+星级+5个操作按钮」，横屏窄高下按钮被挤出可视区，
+	   用户「编辑不到」。换行后名单列表仍可滚动，触控目标也更大。 */
+	:global(.mobile) .member {
+		flex-wrap: wrap;
+		row-gap: 0.2rem;
+		padding: 0.4rem 0.4rem;
+	}
+
+	:global(.mobile) .ops {
+		opacity: 1;
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	:global(.mobile) .icon-btn,
+	:global(.mobile) .rarity-btn {
+		width: 1.9rem;
+		height: 1.9rem;
 	}
 
 	.icon-btn {
