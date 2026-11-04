@@ -1,8 +1,22 @@
 <script>
 	import { getContext, onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { mobileMode, isMobile, assets } from '$lib/store/app-stores';
+	import { t, locale } from 'svelte-i18n';
+	import { assets } from '$lib/store/app-stores';
 	import { itemList, listingAssets, blobAssets } from '$lib/helpers/assets';
+
+	// 首屏文本不能用裸 $t：svelte-i18n 的 locale.set 在字典异步加载完成前 locale 仍为 null，
+	// 此时 $t 直接 throw（SSR prerender 会整站 500）。locale 未就绪时回退默认中文，
+	// 字典到达后 $t 响应式重渲染自动切到正确语言。
+	$: connectingText = $locale ? $t('loader.connecting', { default: '加载中' }) : '加载中';
+	$: errorTitleText = $locale
+		? $t('loader.errorTitle', { default: '加载部分素材时出错，可能会影响你的祈愿体验。' })
+		: '加载部分素材时出错，可能会影响你的祈愿体验。';
+	$: errorHintText = $locale
+		? $t('loader.errorHint', { default: '你可以尝试重新加载；若仍无法加载，也可以直接打开应用继续使用。' })
+		: '你可以尝试重新加载；若仍无法加载，也可以直接打开应用继续使用。';
+	$: reloadText = $locale ? $t('loader.reload', { default: '重新加载' }) : '重新加载';
+	$: openAnywayText = $locale ? $t('loader.openAnyway', { default: '仍然打开' }) : '仍然打开';
 
 	export let isBannerLoaded = false;
 	export let directLoad = false;
@@ -51,17 +65,17 @@
 	<div class="modal">
 		<div class="modal-content">
 			<div class="msg">
-				加载部分素材时出错，可能会影响你的祈愿体验。
+				{errorTitleText}
 				<br />
 				<small>
 					<small>
-						你可以尝试重新加载；若仍无法加载，也可以直接打开应用继续使用。
+						{errorHintText}
 					</small>
 				</small>
 			</div>
 			<div class="btn">
-				<button class="reload" on:click={() => window.location.reload()}>重新加载</button>
-				<button class="open" on:click={handleLoaded}>仍然打开</button>
+				<button class="reload" on:click={() => window.location.reload()}>{reloadText}</button>
+				<button class="open" on:click={handleLoaded}>{openAnywayText}</button>
 			</div>
 		</div>
 	</div>
@@ -87,16 +101,9 @@
 			</div>
 
 			{#if current < 0}
-				<div class="text connecting" transition:fade>加载中</div>
+				<div class="text connecting" transition:fade>{connectingText}</div>
 			{:else}
 				<div class="text" in:fade>{current > 99 ? 100 : current.toFixed()}%</div>
-			{/if}
-
-			{#if $isMobile && !$mobileMode}
-				<div class="rotate">
-					<i class="gi-rotate-phone" />
-					<span>旋转设备以获得更好体验 </span>
-				</div>
 			{/if}
 		</div>
 	</div>
@@ -197,29 +204,6 @@
 		height: 100%;
 	}
 
-	.rotate {
-		position: fixed;
-		width: 100%;
-		left: 50%;
-		bottom: 20%;
-		transform: translateX(-50%);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		flex-direction: column;
-		color: #000;
-	}
-	.rotate span {
-		font-size: 0.8rem;
-		margin-top: 1rem;
-	}
-
-	.rotate i {
-		animation: rotatePhone 1s infinite alternate;
-		transform-origin: center;
-		line-height: 1rem;
-	}
-
 	.unfilled,
 	.filled {
 		display: block;
@@ -249,15 +233,6 @@
 		}
 		100% {
 			content: '...';
-		}
-	}
-
-	@keyframes rotatePhone {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(-90deg);
 		}
 	}
 </style>

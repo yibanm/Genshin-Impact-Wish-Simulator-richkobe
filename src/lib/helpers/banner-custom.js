@@ -49,7 +49,7 @@ export const localBanner = {
 
 export const onlineBanner = {
 	async _postData({ action, data = {}, id }) {
-		// 中文修改版：本版本没有配置作者后端（API_HOST 为空），自定义卡池不再支持云分享。
+		// 本项目：本版本没有配置作者后端（API_HOST 为空），自定义卡池不再支持云分享。
 		// 在这里直接短路，避免拼出 "/storage" 这种相对地址发出无效请求——
 		// 那既违背「完全离线」的承诺，也会在控制台留下报错噪音。
 		if (!API_HOST) return { success: false, error: 'offline' };
@@ -159,6 +159,8 @@ export const onlineBanner = {
 
 	async deleteImage({ hash, id } = {}) {
 		if (!(hash && id)) return;
+		// 与 _postData 同款短路：本项目无作者后端，云图床删除请求一律不发（完全离线承诺）
+		if (!API_HOST) return false;
 
 		try {
 			const formdata = new FormData();

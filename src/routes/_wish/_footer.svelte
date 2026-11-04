@@ -201,7 +201,7 @@
 					<span> {$t('customBanner.finishAndWish')} </span>
 				</button>
 
-				<!-- 中文修改版：此处原有「发布/分享卡池」按钮，依赖 imgbb 图床（VITE_IBB_KEY）
+				<!-- 本项目：此处原有「发布/分享卡池」按钮，依赖 imgbb 图床（VITE_IBB_KEY）
 				     与作者后端（VITE_API_HOST）上传卡面图，桌面离线版无法使用，已移除。
 				     自定义卡池仍可在本地创建并用于祈愿（见上方 finishAndWish）。 -->
 			</div>

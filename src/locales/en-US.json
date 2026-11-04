@@ -23,7 +23,7 @@
 	"confirmButton": "Confirm",
 	"cancelButton": "Cancel",
 	"disclaimer": "All assets used in this site are owned by miHoYo.",
-	"fanmade": "Modded by richkobe",
+	"fanmade": "Author: richkobe",
 	"pressToContinue": "Press anywhere in the blank area to continue",
 	"installInstruction": "User Guide",
 	"dontShowAgain": "Don't show again",
@@ -183,7 +183,8 @@
 		"lastSync": "Last Sync: {time}",
 		"inactive": "Inactive",
 		"unshared": "Not shared yet",
-		"create": "Create Banner"
+		"create": "Create Banner",
+		"maintenance": "Some features are disabled for maintenance!"
 	},
 	"backupRestore": {
 		"cloudSync": "Cloud Sync",
@@ -241,6 +242,7 @@
 	"wish": {
 		"wishTitle": "Wish",
 		"rollButton": "Wish {count}",
+		"rollFailed": "This wish failed, please try again",
 		"stellaFortuna": "Stella Fortuna",
 		"loadFailed": "Failed to load Banner! <br /> Please switch to other banner or reconnect to the internet to avoid errors!",
 		"loadMeteor": "Load Animation",
@@ -600,7 +602,6 @@
 		"multiRoll": "Number per multi-roll",
 		"factoryReset": "Clear Data and Restore Default",
 		"resetTitle": "Factory Reset",
-		"rotate": "Rotate for better experience",
 		"keepSetting": "Keep Settings? <small> Current Pity, Balance and the Settings will not be deleted </small>",
 		"clearCache": "Clear Caches ( {size} ) ? <small> You will re-load the cached assets after this action</small>",
 		"resetButton": "Reset Now",
@@ -625,7 +626,12 @@
 			"Ads Removed",
 			"Unlimited Custom Banners",
 			"You can use the same key for {HSRWishSim} to get the same benefits"
-		]
+		],
+		"notesTitle": "Notes:",
+		"note1": "The pity system follows the real game as closely as possible: depending on the banner you pull on, the chance of high-rarity items rises after a certain number of pulls. Exact rates are on the Details page of each banner.",
+		"note2": "This app stores your wish records in LocalStorage and IndexedDB, entirely on your browser or device. Clearing browser data also deletes this app data with no way to recover it. We never upload your data to any cloud.",
+		"note3": "All upstream ads, donations and third-party services (comments, cloud sync, image hosting, activation codes) have been removed. The app collects and uploads nothing that identifies you, and works fully offline.",
+		"changelog": "Changelog"
 	},
 	"rollcall": {
 		"groupChar": "Character lists",
@@ -642,12 +648,33 @@
 	},
 	"about": {
 		"version": "Version",
-		"intro": "A Chinese-modified fork of the open-source Genshin Impact Wish Simulator (MIT): adds multi-list roll call, removes all ads and donations, fully Chinese UI, works completely offline. Game assets belong to miHoYo / HoYoverse.",
+		"intro": "Developed and maintained by richkobe: multi-list roll call, works completely offline. Game assets belong to miHoYo / HoYoverse.",
 		"repo": "GitHub repository",
 		"issues": "Report an issue",
 		"starHint": "If this mod is useful to you, a star on the repository is the most practical support for free maintenance.",
 		"star": "Give a star",
 		"changelog": "Changelog (brief)",
 		"license": "Source code under MIT; game assets and names belong to miHoYo / HoYoverse. Not for commercial use."
+	},
+	"loader": {
+		"connecting": "Loading",
+		"errorTitle": "Some assets failed to load, which may affect your wish experience.",
+		"errorHint": "You can try reloading; if it still fails, you can open the app anyway and keep using it.",
+		"reload": "Reload",
+		"openAnyway": "Open anyway"
+	},
+	"copied": "Copied to clipboard",
+	"error": {
+		"title": "Error {status}",
+		"desc": "Something went wrong with the page you were looking for.",
+		"backHome": "Back to home"
+	},
+	"privacy": {
+		"h1": "Genshin Wish Roll Caller Privacy Policy"
+	},
+	"changelog": {
+		"featured": "Featured",
+		"tipTitle": "Tip the author",
+		"tipHint": "If you find this project fun or helpful, scan the WeChat QR code below to buy the author a milk tea"
 	}
 }

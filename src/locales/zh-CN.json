@@ -23,7 +23,7 @@
 	"confirmButton": "确认",
 	"cancelButton": "取消",
 	"disclaimer": "本网站使用的所有资源均归米哈游所有。",
-	"fanmade": "本项目由 richkobe 修改",
+	"fanmade": "作者：richkobe",
 	"pressToContinue": "点击空白区域继续",
 	"installInstruction": "使用教程",
 	"dontShowAgain": "不再提示",
@@ -183,7 +183,8 @@
 		"lastSync": "上次同步：{time}",
 		"inactive": "未启用",
 		"unshared": "尚未分享",
-		"create": "创建卡池"
+		"create": "创建卡池",
+		"maintenance": "部分功能因维护已停用！"
 	},
 	"backupRestore": {
 		"cloudSync": "云端同步",
@@ -240,6 +241,7 @@
 	},
 	"wish": {
 		"rollButton": "祈愿{count}次",
+		"rollFailed": "本次祈愿出错了，请重试",
 		"stellaFortuna": "对应角色的命星",
 		"loadFailed": "卡池加载失败！<br /> 请切换到其他卡池，或重新连接网络以避免出错！",
 		"loadMeteor": "加载动画",
@@ -602,7 +604,6 @@
 		"multiRoll": "十连抽数设置",
 		"factoryReset": "清除数据并恢复默认",
 		"resetTitle": "恢复默认",
-		"rotate": "旋转设备以获得更好体验",
 		"keepSetting": "保留设置？<small> 当前已垫抽数、余额与设置将不会被删除 </small>",
 		"clearCache": "清空缓存 ( {size} ) ？<small>勾选本项并恢复后将会重载资源！</small>",
 		"resetButton": "现在重置",
@@ -630,7 +631,12 @@
 		],
 		"rollcall": "名单点名",
 		"latestUpdate": "（最新更新）",
-		"recommendChrome": "为获得最佳体验，建议使用 Google Chrome 浏览器打开，部分功能在其他浏览器上可能无法完整支持。"
+		"recommendChrome": "为获得最佳体验，建议使用 Google Chrome 浏览器打开，部分功能在其他浏览器上可能无法完整支持。",
+		"notesTitle": "说明：",
+		"note1": "本模拟器的保底机制尽量贴近游戏实际：根据你所抽卡池的不同，达到一定保底抽数后，获得高星物品的概率会逐步提升。具体概率数值可在卡池的【详情】页查看。",
+		"note2": "本应用使用 LocalStorage 与 IndexedDB 保存你的祈愿记录，数据全部存储在你的浏览器/设备本地。若清除浏览器数据，与本应用相关的数据也会一并丢失且无法恢复——我们从不将你的数据上传到云端。",
+		"note3": "本应用已移除广告、赞赏与全部第三方服务（评论区、云端同步、图床上传、激活码校验）。应用不收集、不上传任何可识别你身份的信息，可完全离线使用。",
+		"changelog": "更新日志"
 	},
 	"rollcall": {
 		"bannerTag": "点名祈愿",
@@ -695,12 +701,33 @@
 	},
 	"about": {
 		"version": "版本",
-		"intro": "本项目是基于开源项目 Genshin Impact Wish Simulator（MIT 协议）的中文修改版：新增多名单点名功能，移除全部广告与赞赏，全中文界面，可完全离线使用。游戏素材版权归 miHoYo / HoYoverse 所有。",
+		"intro": "由 richkobe 开发与维护：支持多名单点名，可完全离线使用。游戏素材版权归 miHoYo / HoYoverse 所有。",
 		"repo": "GitHub 仓库",
 		"issues": "问题反馈（Issues）",
-		"starHint": "如果这个修改版对你有用，欢迎到仓库点个 star——这是对无偿维护最实在的支持。",
+		"starHint": "如果这个项目对你有用，欢迎到仓库点个 star——这是对无偿维护最实在的支持。",
 		"star": "去点 star",
 		"changelog": "更新日志（简略）",
 		"license": "源码遵循 MIT 协议；游戏素材与名称版权归 miHoYo / HoYoverse 所有，本项目不用于任何商业用途。"
+	},
+	"loader": {
+		"connecting": "加载中",
+		"errorTitle": "加载部分素材时出错，可能会影响你的祈愿体验。",
+		"errorHint": "你可以尝试重新加载；若仍无法加载，也可以直接打开应用继续使用。",
+		"reload": "重新加载",
+		"openAnyway": "仍然打开"
+	},
+	"copied": "已复制到剪贴板",
+	"error": {
+		"title": "出错了 {status}",
+		"desc": "你要找的页面出了点问题……",
+		"backHome": "回到首页"
+	},
+	"privacy": {
+		"h1": "原神抽卡点名器隐私政策"
+	},
+	"changelog": {
+		"featured": "重点",
+		"tipTitle": "赞赏码",
+		"tipHint": "如果你觉得本项目有趣或者对你有帮助，可以微信扫描赞赏码请作者喝杯奶茶"
 	}
 }

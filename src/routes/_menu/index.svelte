@@ -4,18 +4,19 @@
 	import { t } from 'svelte-i18n';
 	import hotkeys from 'hotkeys-js';
 
-	import { editorMode, isMobile, mobileMode, menuTarget } from '$lib/store/app-stores';
+	import { editorMode, menuTarget } from '$lib/store/app-stores';
 	import { playSfx } from '$lib/helpers/audio/audio';
 
 	// Components
 	import Options from './Settings.svelte';
 	import About from './About.svelte';
+	import Changelog from './Changelog.svelte';
 	import Sidebar from './_sidebar.svelte';
 	import CustomBanner from './CustomBanner.svelte';
 	import BackupRestore from './BackupRestore.svelte';
 	import Rollcall from './Rollcall.svelte';
 
-	// 中文修改版：支持从别处（如点名卡池卡面）直达指定子页；无指定时用默认页
+	// 本项目：支持从别处（如点名卡池卡面）直达指定子页；无指定时用默认页
 	const initialContent = () => {
 		if ($menuTarget) return $menuTarget;
 		return $editorMode ? 'customBanner' : 'options';
@@ -63,19 +64,14 @@
 				<Options />
 			{:else if activeContent === 'about'}
 				<About />
+			{:else if activeContent === 'changelog'}
+				<Changelog />
 			{:else if activeContent === 'customBanner'}
 				<CustomBanner />
 			{:else if activeContent === 'backupRestore'}
 				<BackupRestore />
 			{:else if activeContent === 'rollcall'}
 				<Rollcall />
-			{/if}
-
-			{#if $isMobile && !$mobileMode}
-				<div class="rotate">
-					<i class="gi-rotate-phone" />
-					<span>{$t('menu.rotate')} </span>
-				</div>
 			{/if}
 		</div>
 	</div>
@@ -135,21 +131,6 @@
 		position: relative;
 	}
 
-	.rotate {
-		position: fixed;
-		bottom: 5%;
-		left: 5%;
-		color: #fff;
-		display: flex;
-		flex-direction: column;
-		text-align: center;
-	}
-
-	.gi-rotate-phone {
-		font-size: 3rem;
-		animation: rotatePhone 1s infinite alternate;
-	}
-
 	:global(.mobile) .close {
 		margin-right: 4%;
 	}
@@ -163,15 +144,6 @@
 			width: 100%;
 			height: 100%;
 			margin-top: 1.5rem;
-		}
-	}
-
-	@keyframes rotatePhone {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(-90deg);
 		}
 	}
 </style>

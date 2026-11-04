@@ -1,14 +1,21 @@
 <script>
 	import { page } from '$app/stores';
 	import { getContext, onMount } from 'svelte';
+	import { t, locale } from 'svelte-i18n';
 	import Background from '$lib/components/RandomBackground.svelte';
 
 	const loaded = getContext('isBannerLoaded');
 	onMount(loaded);
+
+	// 与 InitialLoader 同款：错误页可能在字典异步加载完成前渲染，
+	// locale 未就绪时 $t 会 throw，用响应式回退兜底
+	$: titleText = $locale ? $t('error.title', { values: { status: $page.status }, default: `出错了 ${$page.status}` }) : `出错了 ${$page.status}`;
+	$: descText = $locale ? $t('error.desc', { default: '你要找的页面出了点问题……' }) : '你要找的页面出了点问题……';
+	$: backText = $locale ? $t('error.backHome', { default: '回到首页' }) : '回到首页';
 </script>
 
 <svelte:head>
-	<title>出错了 {$page.status}</title>
+	<title>{titleText}</title>
 </svelte:head>
 
 <section>
@@ -19,10 +26,10 @@
 		<i class="gi-primo-star bottom-left" />
 		<i class="gi-primo-star bottom-right" />
 		<i class="gi-inazuma icon-bg" />
-		<h1>出错了 {$page.status}</h1>
+		<h1>{titleText}</h1>
 		<h2>{$page.error.message}</h2>
-		<p>你要找的页面出了点问题……</p>
-		<a href="/"> <i class="gi-reply" /> 回到首页 </a>
+		<p>{descText}</p>
+		<a href="/"> <i class="gi-reply" /> {backText} </a>
 	</div>
 </section>
 

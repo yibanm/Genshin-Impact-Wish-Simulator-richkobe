@@ -26,6 +26,10 @@
 			<button on:click={() => selectMenu('about')}> {$t('menu.about')} </button>
 		</div>
 
+		<div class="menu-item" class:active={activeContent === 'changelog'}>
+			<button on:click={() => selectMenu('changelog')}> {$t('menu.changelog')} </button>
+		</div>
+
 		<div class="menu-item" class:active={activeContent === 'backupRestore'}>
 			<button on:click={() => selectMenu('backupRestore')}> {$t('menu.backupRestore')} </button>
 		</div>

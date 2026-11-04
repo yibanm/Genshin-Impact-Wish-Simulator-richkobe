@@ -1,4 +1,4 @@
-// 中文修改版：原实现直接用 btoa/atob，只能处理 Latin1 字符。
+// 本项目：原实现直接用 btoa/atob，只能处理 Latin1 字符。
 // 点名结果的 name 是中文，btoa 会抛 InvalidCharacterError 并让整个结果组件崩溃。
 // 改为 UTF-8 安全编码：先 encodeURIComponent 再 btoa。
 // 旧链接内容是纯 ASCII，encodeURIComponent 对其无影响，因此向后兼容。

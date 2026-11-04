@@ -48,7 +48,7 @@
 		return playSfx();
 	};
 
-	// 中文修改版：点名卡池没有概率详情可看，改为就地弹出名单管理浮层小窗。
+	// 本项目：点名卡池没有概率详情可看，改为就地弹出名单管理浮层小窗。
 	// 不再跳整页菜单——小屏/窄窗口下整页菜单会顶走抽卡画面。
 	const openRollcall = () => {
 		rollcallPanel.set(true);
@@ -154,7 +154,7 @@
 				<FrameStandard {bannerName} />
 			</div>
 
-			<!-- Roll Call Banner（中文修改版新增的点名卡池） -->
+			<!-- Roll Call Banner（本项目新增的点名卡池） -->
 		{:else if type === 'member'}
 			<!-- 点名没有专属美术资源，沿用常驻祈愿的卡面立绘（bannerName 由 banner-loader 指定），
 			     视觉与其它卡池保持一致 -->

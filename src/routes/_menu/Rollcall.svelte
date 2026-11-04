@@ -26,7 +26,7 @@
 	import { addMembers } from '$lib/helpers/dataAPI/api-rollcall';
 
 	/**
-	 * 名单管理页（中文修改版新增）
+	 * 名单管理页（本项目新增）
 	 *
 	 * 左半部分：勾选启用哪些名单 + 新建 / 导入 TXT 快捷入口。
 	 * 右半部分：编辑选中的名单（增删条目、改星级、导入图标）。

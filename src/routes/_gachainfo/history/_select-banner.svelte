@@ -10,7 +10,7 @@
 	export let banner;
 	let showSelectList = false;
 
-	// 中文修改版：新增 member（点名祈愿），让点名记录也能在历史页单独筛选
+	// 本项目：新增 member（点名祈愿），让点名记录也能在历史页单独筛选
 	const list = ['beginner', 'character-event', 'weapon-event', 'chronicled', 'standard', 'member'];
 	$: nowOpenIndex = list.findIndex((type) => type === banner.toLocaleLowerCase());
 	$: selected = nowOpenIndex < 0 ? 2 : nowOpenIndex;

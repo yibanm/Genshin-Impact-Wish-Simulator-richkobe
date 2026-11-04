@@ -110,7 +110,7 @@
 	transition:fade={{ duration: 250 }}
 >
 	{#if onshot}
-		<div class="uid">原神抽卡点名器</div>
+		<div class="uid">{$t('title')}</div>
 	{/if}
 
 	{#if preview && !isOwned}

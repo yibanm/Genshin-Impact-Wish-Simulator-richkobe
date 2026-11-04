@@ -1,25 +1,27 @@
 <script>
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import { APP_TITLE } from '$lib/env';
 	import { html } from '$post/privacy.md';
+
+	// prerender 首屏字典未加载完时 locale 为 null，$t 会 throw，回退兜底
+	$: h1Text = $locale ? $t('privacy.h1', { default: '原神抽卡点名器隐私政策' }) : '原神抽卡点名器隐私政策';
+	$: titleText = $locale ? $t('title', { default: APP_TITLE }) : APP_TITLE;
 </script>
 
 <svelte:head>
 	<title>
-		隐私政策 | {$t('title', { default: APP_TITLE })}
+		{h1Text} | {titleText}
 	</title>
 </svelte:head>
 
 <section>
 	<header>
-		<h1>原神抽卡点名器隐私政策</h1>
-		<h2>{$t('title', { default: APP_TITLE })}</h2>
+		<h1>{h1Text}</h1>
+		<h2>{titleText}</h2>
 	</header>
 
 	<article>
 		{@html html}
-
-		<span id="ezoic-privacy-policy-embed" />
 	</article>
 </section>
 
@@ -39,8 +41,6 @@
 		justify-content: center;
 		align-items: center;
 		color: #fff;
-		background-image: url('https://user-images.githubusercontent.com/13815468/200537311-398f386d-00c3-4a5c-a338-54588c79095b.jpg');
-		background-size: cover;
 		position: relative;
 	}
 	header::after {

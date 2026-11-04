@@ -18,7 +18,7 @@
 	export let stelaFortuna = false;
 	export let bonusQty = 0;
 	export let rarity = 4;
-	// 中文修改版：点名结果的名单名字（不走语言包，直接显示）
+	// 本项目：点名结果的名单名字（不走语言包，直接显示）
 	export let chineseChar = '';
 	// 点名结果的图标类型：char / weapon / null（自定义名单）
 	export let memberIconType = null;

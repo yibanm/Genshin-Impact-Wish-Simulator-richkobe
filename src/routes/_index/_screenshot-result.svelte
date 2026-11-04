@@ -1,6 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 	import { fade, fly, scale } from 'svelte/transition';
+	import { t } from 'svelte-i18n';
 	import { saveAs } from 'file-saver';
 
 	import { APP_TITLE } from '$lib/env';
@@ -122,7 +123,7 @@
 	</div>
 
 	{#if showToast}
-		<div class="toast" in:fly={{ y: 10 }} out:fade>已复制到剪贴板</div>
+		<div class="toast" in:fly={{ y: 10 }} out:fade>{$t('copied')}</div>
 	{/if}
 </div>
 

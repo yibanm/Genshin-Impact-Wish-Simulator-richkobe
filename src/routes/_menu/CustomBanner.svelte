@@ -209,7 +209,7 @@
 						<div class="item blank locke disabled">
 							<button class="add" disabled>
 								<i class="gi-gear" />
-								<span>部分功能因维护已停用！</span>
+								<span>{$t('customBanner.maintenance')}</span>
 							</button>
 						</div>{/if}
 				</div>

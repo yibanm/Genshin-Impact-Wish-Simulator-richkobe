@@ -134,7 +134,7 @@ const buildOfficialList = async (patch, phase) => {
 	if (chronicled) list.push({ type: 'chronicled', stdver, ...chronicled });
 	list.push({ type: 'standard', stdver, ...stdFeatured });
 
-	// 中文修改版：点名卡池。放在列表末尾，与其它卡池同级。
+	// 本项目：点名卡池。放在列表末尾，与其它卡池同级。
 	// 专用海报 rollcall-poster（星空+主星合成图，不贴常驻海报）；
 	// 标签图标在 _banner-button 的 member 分支单独取 rollcall-tab。
 	list.push({

@@ -15,7 +15,7 @@
 	export let clientHeight = 0;
 	export let clientWidth = 0;
 	export let offset = {};
-	// 中文修改版：点名结果的图标地址（预置素材 URL 或自定义 blob 的 objectURL）
+	// 本项目：点名结果的图标地址（预置素材 URL 或自定义 blob 的 objectURL）
 	export let iconUrl = null;
 	export let chineseChar = '';
 	// 点名结果的图标类型，用于查语言包取中文显示名
@@ -25,7 +25,7 @@
 </script>
 
 <div class="zoomist-wrapper splash-art anim {type}" style="overflow: visible;" use:removeAnimClass>
-	<!-- 中文修改版：点名结果。有图标就显示图标（角色头像/武器图标/自定义导入图），
+	<!-- 本项目：点名结果。有图标就显示图标（角色头像/武器图标/自定义导入图），
 	     没有图标（纯文字名单）则显示姓名大字，保证结果卡永远有内容可看 -->
 	{#if type === 'member'}
 		{#if iconUrl}

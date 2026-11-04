@@ -21,7 +21,7 @@
 	import { pushToast } from '$lib/helpers/toast';
 	import { HistoryManager } from '$lib/helpers/dataAPI/api-indexeddb';
 	import WISH, { roll } from '$lib/helpers/gacha/Wish';
-	// 中文修改版新增：点名（抽人名）功能
+	// 本项目新增：点名（抽人名）功能
 	import { drawMembers } from '$lib/helpers/rollcall/draw';
 	import { attachIconUrls } from '$lib/helpers/rollcall/icon';
 	import { refreshRollcall } from '$lib/helpers/dataAPI/api-rollcall';
@@ -34,7 +34,7 @@
 	import EpitomizedModal from './epitomized-path/EpitomizedPath.svelte';
 	import Meteor from './wish-result/_meteor.svelte';
 	import WishResult from './wish-result/WishResult.svelte';
-	// 中文修改版：名单管理浮层小窗（点名卡池「名单管理」按钮打开）
+	// 本项目：名单管理浮层小窗（点名卡池「名单管理」按钮打开）
 	import RollcallPanel from './_rollcall-panel.svelte';
 	import { rollcallPanel } from '$lib/store/app-stores';
 
@@ -114,48 +114,62 @@
 		const indexOfCharBanner = bannerToRoll === 'character-event' ? getIndexOfCharBanner() : 0;
 		onWish.set(true);
 
-		// 中文修改版：点名卡池不走游戏概率系统，改为从名单里抽人。
+		// 本项目：点名卡池不走游戏概率系统，改为从名单里抽人。
 		// 名单为空时不能抽，提示用户去菜单里勾选名单（复刻原版壳层的 alert 行为，
 		// 但用应用自己的 toast 组件，保持视觉一致）。
 		if (bannerToRoll === 'member') {
-			const members = drawMembers(count);
-			if (!members.length) {
+			try {
+				const members = drawMembers(count);
+				if (!members.length) {
+					onWish.set(false);
+					pushToast({ message: get(t)('rollcall.emptyPool'), type: 'error' });
+					return;
+				}
+				// 图标可能是 IndexedDB 里的 blob，需异步转成可显示的 URL
+				const withIcons = await attachIconUrls(members);
+				// 逐个写入祈愿历史，让「历史」页也能看到点名记录
+				for (const item of withIcons) {
+					tmp.push(item);
+					await saveMemberHistory(item);
+				}
+				// 池进度已推进，刷新一次快照，让卡面与管理页的「本轮已点 x/y」同步
+				refreshRollcall();
+				result = tmp;
+				handleMeteorAnimation();
+				if (isUnlimited) return;
+				updateMilestones();
+				updateFatesBalance(bannerToRoll);
+			} catch (e) {
+				// 异常必须复位 onWish：它是全局 context，卡 true 会让全站祈愿按钮永久灰
+				console.error('点名抽卡失败：', e);
 				onWish.set(false);
-				pushToast({ message: get(t)('rollcall.emptyPool'), type: 'error' });
-				return;
+				pushToast({ message: get(t)('wish.rollFailed'), type: 'error' });
 			}
-			// 图标可能是 IndexedDB 里的 blob，需异步转成可显示的 URL
-			const withIcons = await attachIconUrls(members);
-			// 逐个写入祈愿历史，让「历史」页也能看到点名记录
-			for (const item of withIcons) {
-				tmp.push(item);
-				await saveMemberHistory(item);
+			return;
+		}
+
+		try {
+			for (let i = 0; i < count; i++) {
+				const result = await roll(bannerToRoll, WishInstance, indexOfCharBanner);
+				tmp.push(result);
 			}
-			// 池进度已推进，刷新一次快照，让卡面与管理页的「本轮已点 x/y」同步
-			refreshRollcall();
+
 			result = tmp;
 			handleMeteorAnimation();
 			if (isUnlimited) return;
 			updateMilestones();
 			updateFatesBalance(bannerToRoll);
-			return;
+		} catch (e) {
+			// 同上：roll 链任一 await 抛错都不能让 onWish 卡 true（按钮永久灰的根因）
+			console.error('祈愿失败：', e);
+			onWish.set(false);
+			pushToast({ message: get(t)('wish.rollFailed'), type: 'error' });
 		}
-
-		for (let i = 0; i < count; i++) {
-			const result = await roll(bannerToRoll, WishInstance, indexOfCharBanner);
-			tmp.push(result);
-		}
-
-		result = tmp;
-		handleMeteorAnimation();
-		if (isUnlimited) return;
-		updateMilestones();
-		updateFatesBalance(bannerToRoll);
 	};
 	setContext('doRoll', doRoll);
 
 	const updateFatesBalance = (banner) => {
-		// 中文修改版：点名卡池与常驻/新手一样消耗相遇之缘（点名不涉及限定角色，不该花纠缠之缘）
+		// 本项目：点名卡池与常驻/新手一样消耗相遇之缘（点名不涉及限定角色，不该花纠缠之缘）
 		const isAcquaint = ['beginner', 'standard', 'member'].includes(banner);
 		const funds = isAcquaint ? acquaint : intertwined;
 		funds.update((n) => {

@@ -1,6 +1,6 @@
-# 原神抽卡点名器 — 中文修改版的原神祈愿模拟器，新增多名单点名功能
+# 原神抽卡点名器 — 原神风格抽卡 + 多名单点名工具
 
-基于开源项目 [Genshin Impact Wish Simulator](https://github.com/Mantan21/Genshin-Impact-Wish-Simulator)（MIT 协议）二次开发：还原游戏抽卡体验（保底、定轨、星辉星尘结算），并新增**名单点名**——把班级、团队或任意名单接入抽卡流程，用原神风格的抽卡动画随机点人，一轮内不重复。
+作者 richkobe。还原游戏抽卡体验（保底、定轨、星辉星尘结算），并新增**名单点名**——把班级、团队或任意名单接入抽卡流程，用原神风格的抽卡动画随机点人，一轮内不重复。
 
 **亮点**
 
@@ -80,6 +80,6 @@ npm run tauri:build  # Windows 桌面版（Tauri，需 Rust 工具链）
 
 ## 许可证
 
-基于 [Genshin Impact Wish Simulator](https://github.com/Mantan21/Genshin-Impact-Wish-Simulator) 二次开发，沿用 MIT 许可证，原版权声明见 `LICENSE`。点名结果展示使用的毛笔字体为马善政楷书（OFL-1.1）。
+基于开源项目 [Genshin Impact Wish Simulator](https://github.com/Mantan21/Genshin-Impact-Wish-Simulator)（MIT 许可证），原版权声明见 `LICENSE`。点名结果展示使用的毛笔字体为马善政楷书（OFL-1.1）。
 
 游戏内角色立绘、卡面、图标、音效等素材版权归 miHoYo / HoYoverse 所有，本项目为粉丝自制的非商业模拟工具，与 miHoYo / HoYoverse 无任何关联。

@@ -9,7 +9,7 @@
 	import { playSfx } from '$lib/helpers/audio/audio';
 	import Modal from '$lib/components/ModalTpl.svelte';
 
-	// 中文修改版：已移除上游的付费激活码校验（adKey / verifyKey）与赞赏入口，
+	// 本项目：已移除上游的付费激活码校验（adKey / verifyKey）与赞赏入口，
 	// 本弹窗只保留「更新公告」职责，因此不再读取激活码，也不再有 key 过期提示分支。
 	let content;
 	let contentHeight;

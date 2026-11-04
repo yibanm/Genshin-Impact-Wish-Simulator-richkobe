@@ -15,6 +15,23 @@ const root = path.resolve(__dirname, '..');
 const DIRS = ['src/images/banner', 'src/images/characters'];
 const QUALITY = 80;
 
+// Windows 下 Defender/索引服务会瞬时占用文件，writeFileSync 报 UNKNOWN: unknown error, open。
+// 轻量重试（最多 3 次，间隔 200/600ms）覆盖绝大多数瞬时锁，避免整批误判为失败。
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const writeWithRetry = async (f, buf) => {
+	let lastErr;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		try {
+			fs.writeFileSync(f, buf);
+			return true;
+		} catch (e) {
+			lastErr = e;
+			if (attempt < 2) await sleep(200 + attempt * 400);
+		}
+	}
+	throw lastErr;
+};
+
 const walk = (dir, out) => {
 	for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
 		const p = path.join(dir, e.name);
@@ -38,10 +55,13 @@ const run = async () => {
 		const f = files[i];
 		const before = fs.statSync(f).size;
 		try {
-			const buf = await sharp(f).webp({ quality: QUALITY }).toBuffer();
+			// 必须先 readFileSync 成 Buffer 再交给 sharp：sharp(路径) 会让 libvips 保持文件句柄，
+			// Windows 上紧接着 writeFileSync 同一文件触发共享冲突（UNKNOWN -4094）。
+			const src = fs.readFileSync(f);
+			const buf = await sharp(src).webp({ quality: QUALITY }).toBuffer();
 			// 只在新文件更小时覆盖，避免小图反变大
 			if (buf.length < before) {
-				fs.writeFileSync(f, buf);
+				await writeWithRetry(f, buf);
 				saved += before - buf.length;
 				replaced++;
 			} else {

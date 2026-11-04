@@ -4,7 +4,7 @@
 	import { assets } from '$lib/store/app-stores';
 	import SyncLocal from './backup-restore/_sync-local.svelte';
 
-	// 中文修改版：已移除云同步（上游依赖 VITE_API_HOST 后端与 Google OAuth，桌面离线版不可用），
+	// 本项目：已移除云同步（上游依赖 VITE_API_HOST 后端与 Google OAuth，桌面离线版不可用），
 	// 只保留本地备份/恢复，因此不再需要 tab 切换状态与音效。
 </script>
 

@@ -8,7 +8,7 @@
 	import { playSfx } from '$lib/helpers/audio/audio';
 
 	/**
-	 * 仓库页搜索浮层（G1，中文修改版新增）
+	 * 仓库页搜索浮层（G1，本项目新增）
 	 *
 	 * 检索范围：现有全部角色（characters.json）+ 自定义卡池角色（IndexedDB 里
 	 * 已补全立绘的条目）。武器不在检索范围——用户要求是「所有角色」。
