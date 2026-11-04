@@ -36,8 +36,11 @@ export const getRate = (banner, key) => {
 		return initial[key];
 	}
 
-	const initial = probabilityRates[banner];
-	const local = localrate.get(banner);
+	// 自定义卡池页签（type: 'custom'）没有独立概率表，沿用角色活动池的默认概率
+	// （与旧版「整实例 custom 模式」一致：旧版 probabilityRates['character-event'] 就是它的来源）
+	const tableKey = banner === 'custom' ? 'character-event' : banner;
+	const initial = probabilityRates[tableKey];
+	const local = localrate.get(tableKey);
 	if (!(local[key] || local[key] >= 0)) return initial[key] || 0;
 
 	const val = parseFloat(local[key]);

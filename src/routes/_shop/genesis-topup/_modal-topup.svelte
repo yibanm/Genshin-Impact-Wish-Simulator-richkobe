@@ -205,7 +205,7 @@
 		border-radius: 0.25rem;
 		text-align: center;
 		width: 50%;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		font-size: 0.95rem;
 		border: 2px solid #ccc;
 		display: flex;
@@ -245,7 +245,7 @@
 		color: #ffc107;
 		margin: 1rem;
 		padding: 1rem;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		transition: all 0.2s;
 	}
 

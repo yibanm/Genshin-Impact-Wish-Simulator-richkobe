@@ -25,7 +25,10 @@
 	"disclaimer": "All assets used in this site are owned by miHoYo.",
 	"fanmade": "Modded by richkobe",
 	"pressToContinue": "Press anywhere in the blank area to continue",
-	"installInstruction": "Instructions to Install to Home Screen/Desktop",
+	"installInstruction": "User Guide",
+	"dontShowAgain": "Don't show again",
+	"backToApp": "Back to app",
+	"closeApp": "Close",
 	"share": "Share",
 	"screenshot": "Take Picture",
 	"capturing": "Capturing",
@@ -165,6 +168,7 @@
 		"charTitle": "Character Title",
 		"watermark": "Watermark",
 		"completeAllField": "Please Complete All Required Field!",
+		"completeRequired": "Two things left: name the banner and add at least one rate-up character",
 		"finishAndWish": "Finish and Wish",
 		"publish": "Publish Banner",
 		"updateAndShare": "Update & Share",
@@ -477,6 +481,7 @@
 		"timeReceived": "Time Received",
 		"waiting": "Waiting",
 		"noData": "No data available .",
+		"noMembers": "The list is empty. Use Add, Bulk add, or Import TXT above.",
 		"untracked": "Untracked",
 		"win": "Win 50/50",
 		"lose": "Lose 50/50",
@@ -565,7 +570,12 @@
 		"release": "Release Date",
 		"type": "Type",
 		"owned": "Owned",
-		"showAllOption": "Show All {item}s"
+		"showAllOption": "Show All {item}s",
+		"search": "Search characters",
+		"searchPlaceholder": "Type a character name (any language)",
+		"searchHint": "Type to search all existing and custom characters",
+		"searchEmpty": "No matching character",
+		"searchCustom": "Custom"
 	},
 	"menu": {
 		"no": "No",
@@ -574,6 +584,7 @@
 		"feedback": "Feedback",
 		"options": "Options",
 		"updates": "Update History",
+		"about": "About",
 		"customBanner": "Custom Banner",
 		"backupRestore": "Backup & Restore",
 		"language": "Language",
@@ -620,6 +631,23 @@
 		"groupChar": "Character lists",
 		"groupWeapon": "Weapon lists",
 		"groupCustom": "My lists",
-		"groupSelectAll": "Select all in group"
+		"groupSelectAll": "Select all in group",
+		"addOne": "Add",
+		"memberNameLabel": "Name",
+		"memberNamePlaceholder": "Enter a name",
+		"rarityLabel": "Rarity",
+		"rarityRandom": "Random",
+		"iconLabel": "Image",
+		"importedList": "Imported list"
+	},
+	"about": {
+		"version": "Version",
+		"intro": "A Chinese-modified fork of the open-source Genshin Impact Wish Simulator (MIT): adds multi-list roll call, removes all ads and donations, fully Chinese UI, works completely offline. Game assets belong to miHoYo / HoYoverse.",
+		"repo": "GitHub repository",
+		"issues": "Report an issue",
+		"starHint": "If this mod is useful to you, a star on the repository is the most practical support for free maintenance.",
+		"star": "Give a star",
+		"changelog": "Changelog (brief)",
+		"license": "Source code under MIT; game assets and names belong to miHoYo / HoYoverse. Not for commercial use."
 	}
 }

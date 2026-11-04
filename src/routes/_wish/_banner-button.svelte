@@ -12,6 +12,9 @@
 	export let featured = [];
 	export let character = '';
 	export let index = 0;
+	// C2：自定义卡池页签用用户上传的头像缩略图作图标（最相关的现成素材），
+	// 没传/加载失败时回退到原石星图标
+	export let thumbnail = '';
 
 	const buttonOffset = (itemName, buttonPosition = {}) => {
 		const getDetails = type === 'weapon-event' ? getWpDetails : getCharDetails;
@@ -65,6 +68,18 @@
 					alt="Roll Call"
 					crossorigin="anonymous"
 				/>
+			{:else if type === 'custom'}
+				<!-- 自定义池页签：优先用户头像缩略图，缺失时回退原石星图标 -->
+				{#if thumbnail}
+					<img
+						in:fade
+						on:error={(e) => e.target.remove()}
+						src={thumbnail}
+						alt="Custom Wish"
+					/>
+				{:else}
+					<i class="gi-primo-star custom-fallback" />
+				{/if}
 			{:else if type === 'weapon-event'}
 				{#each featured as { name, buttonPosition }}
 					<img

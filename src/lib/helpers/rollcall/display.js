@@ -1,31 +1,15 @@
 /**
  * 点名结果的展示名（中文修改版）
  *
- * 三种来源的取法不同：
- * - 预置角色名单：名字是 slug（如 lauma），中文名在语言包 `${slug}.name`
- * - 预置武器名单：名字是 slug，中文名在语言包 `${slug}`（武器键不带 .name 后缀）
- * - 自定义名单：录入时就是显示名，直接用 chineseChar / name
+ * F3（2026-11-04）后预置角色/武器名单已全部删除，名单条目只有用户自建一种：
+ * 录入时就是显示名，直接用 chineseChar / name。
+ * 保留 iconType 兼容判断：历史数据里若残留预置条目（iconType 为 char/weapon），
+ * 直接回退显示原始 name，不再查语言包（语言包键已无对应预置语义）。
  *
- * 语言包查不到时回退到原始 name，避免界面显示 undefined。
- *
- * @param {Object} item 点名结果条目（含 name / chineseChar / iconType）
- * @param {Function} translate svelte-i18n 的 t 函数（或 get(t) 的结果）
+ * @param {Object} item 点名结果条目（含 name / chineseChar）
  * @returns {string} 展示名
  */
-export const memberDisplayName = (item, translate) => {
+export const memberDisplayName = (item) => {
 	if (!item) return '';
-	// 自定义名单：录入内容即显示内容
-	if (!item.iconType) return item.chineseChar || item.name || '';
-	if (typeof translate !== 'function') return item.name || '';
-
-	if (item.iconType === 'char') {
-		const key = `${item.name}.name`;
-		const translated = translate(key);
-		return translated === key ? item.name : translated;
-	}
-	if (item.iconType === 'weapon') {
-		const translated = translate(item.name);
-		return translated === item.name ? item.name : translated;
-	}
 	return item.chineseChar || item.name || '';
 };

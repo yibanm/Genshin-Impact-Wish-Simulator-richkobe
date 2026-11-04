@@ -25,6 +25,8 @@
 	import { syncCustomBanner } from '$lib/helpers/banner-custom';
 	// 中文修改版：点名名单 store 的应用级初始化入口
 	import { initRollcall } from '$lib/helpers/dataAPI/api-rollcall';
+	// A2：安卓壳内需要独立的「退出应用」按钮（WebView 无窗口 X）
+	import { isNativeAndroid, exitApp } from '$lib/helpers/platform';
 	// import { initializeDriveAPI } from '$lib/helpers/dataAPI/google-api';
 	import '../app.css';
 
@@ -35,6 +37,8 @@
 	let innerWidth;
 	let isBannerLoaded = false;
 	let isloaded = false;
+	// 只在安卓原生壳内为 true，桌面/浏览器不显示退出按钮
+	let nativeAndroid = false;
 
 	setContext('bannerLoaded', () => (isBannerLoaded = true));
 	setContext('loaded', () => (isloaded = true));
@@ -82,6 +86,9 @@
 
 		isMobile.set(mobileDetect() || innerWidth < 601);
 		if ($isMobile) setMobileMode();
+		// 必须在 onMount 里判定：SSR/prerender 阶段没有 window，
+		// 直接赋值会让静态 HTML 里出现这个按钮（桌面端也会看到）
+		nativeAndroid = isNativeAndroid();
 
 		window.addEventListener('orientationchange', () => {
 			if ($isMobile) setMobileMode();
@@ -179,6 +186,12 @@
 >
 	<Toasts />
 
+	{#if nativeAndroid}
+		<button class="close app-exit" title="退出应用" on:click={exitApp}>
+			<i class="gi-close" />
+		</button>
+	{/if}
+
 	{#if !$isLoading && isloaded}
 		<slot />
 	{/if}
@@ -230,6 +243,18 @@
 		font-style: normal;
 	}
 
+	/* F10：马善政毛笔楷书（OFL-1.1，google/fonts 仓库 ofl/mashanzheng）。
+	   用于点名结果的姓名竖排展示。全量 TTF 5.86MB 不做子集化——
+	   名单是用户自导入的 TXT，姓名用字不可预知，子集化会丢生僻字显示成豆腐块。
+	   许可证文件随仓库保留：static/fonts/MaShanZheng-OFL.txt */
+	@font-face {
+		font-family: 'MaShanZheng';
+		src: url('/fonts/MaShanZheng-Regular.ttf') format('truetype');
+		font-weight: normal;
+		font-style: normal;
+		font-display: swap;
+	}
+
 	:global(.os-theme-light > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle) {
 		background-color: #d2c69c;
 		opacity: 0.5;
@@ -258,17 +283,34 @@
 	.uid {
 		display: block;
 		position: fixed;
-		bottom: 0px;
-		right: 2em;
+		/* B2：水印原本 bottom:0 贴死底边，叠加安全区避开手势条 */
+		bottom: var(--sab);
+		right: calc(2em + var(--sar));
 		z-index: 9999;
 		color: #fff;
 		text-shadow: 0 0 1.5px rgba(0, 0, 0, 0.7);
-		font-family: Roboto, sans-serif;
+		font-family: inherit;
 		pointer-events: none;
+		/* D3 例外：水印不可点击（pointer-events:none），全局「可点带下划线」规则不适用于它 */
+		text-decoration: none;
 	}
 
 	.mobile .uid {
-		right: 5%;
+		right: calc(5% + var(--sar));
+	}
+
+	/*
+	  A2：安卓原生壳内的「退出应用」按钮。
+	  桌面端不渲染（窗口 X 本就是退出，多一个反而冗余）；
+	  祈愿页右上角那个 X 语义是「切换卡池」，不能劫持成退出，
+	  所以这里是一个独立按钮，挂在根布局保证全局可用。
+	*/
+	.app-exit {
+		display: flex;
+		position: fixed;
+		top: calc(0.4rem + var(--sat));
+		right: calc(0.4rem + var(--sar));
+		z-index: 10000;
 	}
 
 	.preview .uid {

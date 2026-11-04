@@ -38,6 +38,30 @@ export const parseNames = (text) => {
 };
 
 /**
+ * F5：行尾「空格 + 数字 3/4/5」解析为自定义星级，例如「张三 5」= 五星角色张三。
+ * 数字不在 3-5 范围（或没有数字）时 rarity 为 null，点名时按随机规则分配星级。
+ * 名字本身以数字结尾的（如「王老 2」想当名字）会被误判——这是格式约定的代价，
+ * 已在导入说明里写明规则。
+ * @param {string} line 单行文本（已 trim）
+ * @returns {{name: string, rarity: number|null}}
+ */
+export const splitRarity = (line) => {
+	const m = line.match(/^(.*?)\s+([345])$/);
+	if (!m) return { name: line, rarity: null };
+	const name = m[1].trim();
+	// 整行就是数字（如「5」）时不当星级处理，否则名字会变空串
+	if (!name) return { name: line, rarity: null };
+	return { name, rarity: Number(m[2]) };
+};
+
+/**
+ * 解析成带星级的条目数组（F5/F6 批量添加共用）。
+ * @param {string} text 文件全文或批量粘贴文本
+ * @returns {Array<{name: string, rarity: number|null}>}
+ */
+export const parseMembers = (text) => parseNames(text).map(splitRarity);
+
+/**
  * 把字节流解码成文本：UTF-8 优先，检出替换字符则回退 GBK。
  * @param {ArrayBuffer|Uint8Array} buf 文件字节
  * @returns {string} 解码后的文本（解码器不可用时保持 UTF-8 结果）
@@ -63,12 +87,13 @@ export const decodeBuffer = (buf) => {
 /**
  * Web 通道：从 `<input type="file">` 选中的 File 读出姓名。
  * @param {File} file 用户选中的文件
- * @returns {Promise<{names: string[], fileName: string}>}
+ * @returns {Promise<{names: string[], members: Array<{name, rarity}>, fileName: string}>}
  */
 export const readNamesFile = async (file) => {
-	if (!file) return { names: [], fileName: '' };
+	if (!file) return { names: [], members: [], fileName: '' };
 	const buf = await file.arrayBuffer();
-	return { names: parseNames(decodeBuffer(buf)), fileName: file.name };
+	const members = parseMembers(decodeBuffer(buf));
+	return { names: members.map((m) => m.name), members, fileName: file.name };
 };
 
 /** 当前是否运行在带名单导入桥的 Electron 壳内 */
@@ -80,14 +105,16 @@ export const hasNativePicker = () =>
  * @returns {Promise<{canceled: boolean, names: string[], fileName: string, error?: string}>}
  */
 export const pickNamesViaBridge = async () => {
-	if (!hasNativePicker()) return { canceled: true, names: [], fileName: '' };
+	if (!hasNativePicker()) return { canceled: true, names: [], members: [], fileName: '' };
 	const res = await window.rollcallBridge.pickNamesFile();
-	if (!res || res.canceled) return { canceled: true, names: [], fileName: '' };
-	if (res.error) return { canceled: false, names: [], fileName: '', error: res.error };
+	if (!res || res.canceled) return { canceled: true, names: [], members: [], fileName: '' };
+	if (res.error) return { canceled: false, names: [], members: [], fileName: '', error: res.error };
+	const members = parseMembers(res.text || '');
 	return {
 		canceled: false,
 		// 主进程已做 UTF-8/GBK 兜底，这里只按行解析
-		names: parseNames(res.text || ''),
+		names: members.map((m) => m.name),
+		members,
 		fileName: res.fileName || ''
 	};
 };

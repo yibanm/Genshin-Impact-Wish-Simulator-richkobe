@@ -70,7 +70,7 @@
 	article {
 		color: var(--text-color);
 		padding: 2% 10%;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	article :global(h2) {

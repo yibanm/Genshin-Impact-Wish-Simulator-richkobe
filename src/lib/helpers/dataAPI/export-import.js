@@ -2,6 +2,7 @@ import { BannerManager, HistoryManager } from './api-indexeddb';
 import { cookie } from './api-cookie';
 import { storageLocal } from './api-localstore';
 import { randomNumber } from '../gacha/itemdrop-base';
+import { saveTextFileNative } from '../platform';
 
 const generateExportID = () => {
 	const { id } = storageLocal.get('export');
@@ -23,11 +24,18 @@ export const generateFileString = async () => {
 
 export const exportFileLegacy = async () => {
 	const text = await generateFileString();
+	const date = new Date().toLocaleDateString();
+	const filename = `genshin-wish-roll_Backup_${date}.bin`;
+
+	// 安卓原生壳里 WebView 没有下载管理器，下面的 <a download> 点击会被静默忽略
+	// （表现就是「导出按钮失效」）。先走原生通道：写缓存目录 + 系统分享面板。
+	const handledNatively = await saveTextFileNative(text, filename);
+	if (handledNatively) return;
+
 	const blob = new Blob([text], { type: 'text/plain' });
 	const anchor = document.createElement('a');
 
-	const date = new Date().toLocaleDateString();
-	anchor.download = `genshin-wish-roll_Backup_${date}.bin`;
+	anchor.download = filename;
 	anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
 	anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
 	anchor.click();

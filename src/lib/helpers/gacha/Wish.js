@@ -1,12 +1,19 @@
+import { get } from 'svelte/store';
 import { standard } from '$lib/data/banners/standard.json';
 import { fatepointManager } from '../dataAPI/api-localstore';
-import { course as wpCourse, chronicledCourse } from '$lib/store/app-stores';
+import {
+	course as wpCourse,
+	chronicledCourse,
+	activeBanner,
+	bannerList
+} from '$lib/store/app-stores';
 import characterWish from './wishCharacter';
 import beginerWish from './wishBeginner';
 import weaponWish from './wishWeapon';
 import standardWish from './wishStandard';
 import roll from './roll';
 import chronicledWish from './wishChronicled';
+import { get5StarItem } from './itemdrop-base';
 
 const initLoadFatepoint = (version, phase) => {
 	['weapon-event', 'chronicled'].forEach((banner) => {
@@ -111,6 +118,45 @@ const WISH = {
 		return result;
 	},
 
+	/**
+	 * 自定义卡池页签（type: 'custom'）的出物通道。
+	 * 数据从「当前页签」读（bannerList 里 type=custom 的那条），不从实例的
+	 * _customData 读——实例现在按官方版本初始化，_customData 是空的。
+	 * 五星走自定义角色（itemdrop-base 的 customData 分支），三四星走通用池，
+	 * 与旧版「整实例 custom 模式」的出物语义一致。
+	 */
+	_customWish(rarity) {
+		const list = get(bannerList);
+		const entry = list[get(activeBanner)];
+		const customData = entry && entry.type === 'custom' ? entry : {};
+		const bannerName = customData.bannerName || '';
+
+		if (rarity === 5) {
+			// get5StarItem 的自定义分支条件是 useRateup && banner 匹配 character，
+			// 两个参数缺一不可，否则落到通用五星池（出官方角色而非自定义角色）
+			const result = get5StarItem({
+				banner: 'character-event',
+				useRateup: true,
+				customData
+			});
+			result.bannerName = bannerName;
+			return result;
+		}
+
+		const wish = characterWish.init({
+			version: this._version,
+			phase: this._phase,
+			stdver: this._standardVer,
+			customData: {},
+			indexOfBanner: 0,
+			featured: [{ bannerName: '', character: '' }],
+			rateup: []
+		});
+		const result = wish.get(rarity);
+		result.bannerName = bannerName;
+		return result;
+	},
+
 	getItem(rarity, banner, indexOfBanner) {
 		const date = new Date();
 		const time = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
@@ -120,6 +166,7 @@ const WISH = {
 		if (banner === 'standard') return { ...resultObj, ...this._standardWish(rarity) };
 		if (banner === 'weapon-event') return { ...resultObj, ...this._weaponWish(rarity) };
 		if (banner === 'chronicled') return { ...resultObj, ...this._chronicledWish(rarity) };
+		if (banner === 'custom') return { ...resultObj, ...this._customWish(rarity) };
 		if (banner === 'character-event') {
 			return { ...resultObj, ...this._characterWish(rarity, indexOfBanner) };
 		}

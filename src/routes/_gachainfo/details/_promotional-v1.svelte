@@ -138,7 +138,7 @@
 	h2,
 	h3 {
 		vertical-align: middle;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	h2 {

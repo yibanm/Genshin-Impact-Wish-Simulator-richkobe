@@ -106,6 +106,12 @@ const manifest = {
 
 /** @type {import('vite').UserConfig} */
 const config = {
+	// 应用版本号注入（关于页用）。不能在浏览器侧 import package.json——
+	// Vite dev server 对 /package.json?import 返回 403（fs 保护），实测菜单整页加载失败。
+	// define 在构建期替换为字面量，dev 与 build 都安全。
+	define: {
+		__APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')).version)
+	},
 	plugins: [
 		imagetools(),
 		sveltekit(),

@@ -84,7 +84,7 @@
 	}
 
 	.content-details:not(.v2) {
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	.content-details :global(h1),

@@ -309,7 +309,7 @@
 		padding: 2%;
 		color: #fff;
 		background-color: rgba(217, 67, 67, 0.75);
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		font-size: 100%;
 		font-weight: bold;
 	}
@@ -416,7 +416,7 @@
 	}
 
 	.time {
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		font-style: italic;
 		font-size: 90%;
 		text-align: center;

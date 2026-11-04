@@ -5,6 +5,7 @@
 	import hotkeys from 'hotkeys-js';
 
 	import { playSfx } from '$lib/helpers/audio/audio';
+	import { exitApp } from '$lib/helpers/platform';
 	import {
 		acquaint,
 		intertwined,
@@ -49,6 +50,22 @@
 	const previousClick = () => {
 		navigate('allbanners');
 		playSfx();
+	};
+
+	// 卡池历史入口（设置右边的时钟按钮）：往期卡池列表，不是左下角的祈愿历史记录
+	const handleHistory = () => {
+		navigate('allbanners');
+		playSfx();
+	};
+
+	// 主界面右上角 X = 关闭程序（用户裁定）。
+	// 有壳（Tauri/Electron/安卓）时真正退出；仅网页时没有「程序」可关，退化为刷新页面。
+	// 注意：esc 快捷键仍走 previousClick（切往期卡池），不跟 X 同语义——
+	// 键盘误触 esc 就直接关程序太激进。
+	const closeOrReload = async () => {
+		playSfx('close');
+		const exited = await exitApp();
+		if (!exited) window.location.reload();
 	};
 
 	const handleMenu = getContext('handleMenu');
@@ -96,6 +113,16 @@
 
 			<button class="help" on:click={handleMenu} title="设置" aria-label="设置">
 				<i class="gi-gear" />
+			</button>
+
+			<!-- 卡池历史入口，放在设置右边（用户指定位置）：往期卡池列表。
+			     图标用内联 SVG 时钟：图标字体 gi-* 无时钟/书本类字形（全量 88 个已核），
+			     乱猜字形会显示成方块（经验 #30/#44）；SVG 与全屏按钮同款做法。 -->
+			<button class="help" on:click={handleHistory} title={$t('wish.banner.previous')} aria-label={$t('wish.banner.previous')}>
+				<svg viewBox="0 0 24 24" width="1.15rem" height="1.15rem" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<circle cx="12" cy="12" r="9" />
+					<polyline points="12 7 12 12 15.5 14" />
+				</svg>
 			</button>
 
 			{#if !$isPWA || !$isMobile}
@@ -153,7 +180,8 @@
 					</MyFund>
 				</div>
 
-				<button class="close" on:click={previousClick} title="切换卡池">
+				<!-- 主界面 X = 关闭程序（有壳）/ 刷新（纯网页），用户裁定 -->
+				<button class="close" on:click={closeOrReload} title={$t('closeApp')}>
 					<i class="gi-close" />
 				</button>
 			{:else}
@@ -171,19 +199,24 @@
 		</div>
 	</div>
 
-	{#if !$editorMode && !$isCustomBanner}
+	<!-- C1：自定义卡池现在是列表里的一个页签，页签栏不再因 isCustomBanner 隐藏。
+	     只有整页编辑模式（editorMode）才隐藏页签栏。 -->
+	{#if !$editorMode}
 		<div class="banner-button" in:inTransition={{ mobile: $mobileMode }}>
 			<div class="bg" style={headerHeightstyle}>
 				<img src={$assets['brand.png']} alt="Brand" crossorigin="anonymous" />
 			</div>
 
-			<div class="button-wrapper" style={$bannerList.length > 5 ? 'flex-wrap: wrap' : ''}>
-				{#each $bannerList as { type, featured, character, region }, i}
+			<!-- C3：页签过多时横向滚动（不再换行堆高顶走卡面）。
+			     滚动条样式在 app.css 已全局定义（5px 细条），横屏下天然可见。 -->
+			<div class="button-wrapper" class:scrollable={$bannerList.length > 5}>
+				{#each $bannerList as { type, featured, character, region, images }, i}
 					<BannerButton
 						{type}
 						{character}
 						index={i}
 						featured={featured || region}
+						thumbnail={type === 'custom' ? images?.thumbnail : ''}
 						active={$activeBanner === i}
 						on:click={() => selectBanner(i)}
 					/>
@@ -281,6 +314,24 @@
 		z-index: 10;
 	}
 
+	/* C3：页签超过一屏时横向滚动，不换行堆高（堆高会顶走卡面）。
+	   滚动条用 app.css 的全局细条样式（5px），暗示可滑动。 */
+	.button-wrapper.scrollable {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		overflow-y: hidden;
+		justify-content: flex-start;
+		scrollbar-width: thin;
+	}
+
+	/* flex 子项默认 flex-shrink:1：容器不够时页签会被压缩变形（aspect-ratio 破坏）
+	   而不是产生滚动条。置 0 后溢出才真正触发滚动（横竖两向同理）。
+	   必须 :global()——button 在子组件 BannerButton 里，父组件的 scoped 选择器
+	   编译后带本组件 hash，子组件元素上没有，不加 :global 规则不生效。 */
+	.button-wrapper :global(button) {
+		flex-shrink: 0;
+	}
+
 	/* mobile */
 
 	:global(.mobile) #header {
@@ -290,8 +341,10 @@
 	:global(.mobile) .top {
 		position: fixed;
 		top: 0;
-		right: 2%;
-		width: calc(100% - 100px);
+		/* B2 安全边距：横屏时挖孔在左右两侧，右边贴边元素要避开 --sar。
+		   width 必须同步扣掉 --sar，否则 fixed 元素的左边界会被推出屏幕外。 */
+		right: calc(2% + var(--sar));
+		width: calc(100% - 100px - var(--sar));
 		display: flex;
 		justify-content: space-between;
 		padding-right: 4%;
@@ -309,6 +362,12 @@
 		height: 100%;
 		justify-content: flex-start;
 		padding-top: 2.5rem;
+		/* C3：移动端页签是竖列且高度固定，页签多了必须能竖向滚动，
+		   否则第 6 个之后的页签（含自定义池）直接溢出屏幕外点不到。
+		   此选择器特异性高于 .scrollable，横滚规则在这里要改回竖滚。 */
+		overflow-y: auto;
+		overflow-x: hidden;
+		flex-wrap: nowrap;
 	}
 
 	:global(.mobile) .bg {

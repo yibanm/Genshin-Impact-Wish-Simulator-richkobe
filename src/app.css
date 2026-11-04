@@ -1,5 +1,16 @@
 :root {
 	letter-spacing: -0.02rem;
+	/*
+	  安全区内边距变量（B2）：贴边元素用 calc() 叠加，避免逐处硬编码。
+	  必须带 0px 兜底——不支持 env() 的环境（桌面浏览器/老 WebView）下，
+	  无兜底的 env() 会让整条声明被丢弃，元素跑到默认位置，比不加还糟。
+	  生效前提是 app.html 的 viewport 带 viewport-fit=cover（已加）。
+	  横屏时挖孔/刘海在屏幕左右两侧，所以 --sal/--sar 是本项目（强制横屏）的重点。
+	*/
+	--sat: env(safe-area-inset-top, 0px);
+	--sar: env(safe-area-inset-right, 0px);
+	--sab: env(safe-area-inset-bottom, 0px);
+	--sal: env(safe-area-inset-left, 0px);
 	--gi-global-font: 'GI_Global_Web', 'GI_JA_Web', 'GI_TH_Web', 'GI_TH_Web', 'GI_ZH_Web', Arial,
 		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
 		'Helvetica Neue', sans-serif;
@@ -21,16 +32,46 @@
 	padding: 0;
 	box-sizing: border-box;
 }
+/*
+  D2：所有可滚动区域右侧统一一条小灰条。
+  作用：① 帮助拖动滚动；② 暗示「本页可滑动」（用户明确要求）。
+  覆盖两类滚动容器：
+  - 原生滚动（WebKit/Blink 走 ::-webkit-scrollbar，Firefox 走 scrollbar-*）
+  - OverlayScrollbars 插件容器（os-theme-light 的 handle 颜色在这里全局覆盖）
+  灰色取半透明黑，浅色面板与深色卡面上都看得见。
+*/
 ::-webkit-scrollbar {
 	width: 5px;
+	height: 5px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-	background-color: rgba(210, 198, 156, 0.5);
+	background-color: rgba(0, 0, 0, 0.25);
 	border-radius: 5px;
 	transition: all 0.2s;
 }
 ::-webkit-scrollbar-thumb:hover {
-	background-color: rgba(210, 198, 156, 1);
+	background-color: rgba(0, 0, 0, 0.45);
+}
+
+/* Firefox：细条 + 灰色滑块 */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+/* OverlayScrollbars 的滑块统一成同一条灰条，与原生滚动观感一致 */
+.os-theme-light > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle,
+.os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle {
+	background-color: rgba(0, 0, 0, 0.25);
+}
+.os-theme-light > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle:hover,
+.os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle:hover,
+.os-theme-light > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle.active,
+.os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle.active {
+	background-color: rgba(0, 0, 0, 0.45);
 }
 
 body {
@@ -190,7 +231,8 @@ p {
 
 a {
 	color: var(--accent-color);
-	text-decoration: none;
+	/* D3：可点击的文字链接常态就带下划线（暗示可点），不再只 hover 才出现 */
+	text-decoration: underline;
 }
 
 a:hover {

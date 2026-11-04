@@ -35,7 +35,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		margin: 1% auto 0;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		font-weight: 600;
 	}
 

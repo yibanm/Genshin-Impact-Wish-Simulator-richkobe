@@ -20,8 +20,10 @@
 			<button on:click={() => selectMenu('rollcall')}> {$t('menu.rollcall')} </button>
 		</div>
 
-		<div class="menu-item" class:active={activeContent === 'updates'}>
-			<button on:click={() => selectMenu('updates')}> {$t('menu.updates')} </button>
+		<!-- E3：更新历史从设置菜单移除（更新公告已在开屏弹窗展示，菜单里重复）；
+		     E4：新增「关于」页（仓库链接/求 star/issues/简略更新日志） -->
+		<div class="menu-item" class:active={activeContent === 'about'}>
+			<button on:click={() => selectMenu('about')}> {$t('menu.about')} </button>
 		</div>
 
 		<div class="menu-item" class:active={activeContent === 'backupRestore'}>

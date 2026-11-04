@@ -208,7 +208,7 @@
 		color: #fff;
 		background-color: rgba(0, 0, 0, 0.4);
 		font-size: 1rem;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	.selected.fill {

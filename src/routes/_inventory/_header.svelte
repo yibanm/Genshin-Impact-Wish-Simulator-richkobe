@@ -15,12 +15,25 @@
 		playSfx('close');
 	};
 
+	// G1：左上角搜索按钮（检索现有 + 自定义的所有角色）
+	const openSearch = getContext('openSearch');
+	const handleSearch = () => {
+		playSfx();
+		openSearch();
+	};
+
 	// shortcut
 	hotkeys('esc', 'inventory', (e) => {
 		e.preventDefault();
 		handleCLose();
 	});
 </script>
+
+<div class="search-slot">
+	<button class="search-btn" on:click={handleSearch} title={$t('inventory.search')}>
+		<i class="gi-search" />
+	</button>
+</div>
 
 <h1 class="title">{$t('inventory.text')} / {$t(activeItem)}</h1>
 <div class="budget">
@@ -97,6 +110,36 @@
 		position: relative;
 		margin: 0 0.3rem;
 		padding: 0 15px 0 30px;
+	}
+
+	/* G1：左上角搜索按钮。必须覆盖上面的通用 button 规则（那条是给货币胶囊按钮的：
+	   固定高 25px + 左 padding 30px 放图标），否则搜索按钮会被压成胶囊且图标错位 */
+	.search-slot {
+		margin-right: 0.5rem;
+	}
+
+	.search-btn {
+		max-width: none;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		margin: 0;
+		border-radius: 50%;
+		background-color: rgba(0, 0, 0, 0.35);
+		color: #d2c69c;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+
+	.search-btn:hover {
+		background-color: rgba(227, 160, 35, 0.5);
+		color: #fff;
+	}
+
+	.search-btn i {
+		font-size: 1rem;
 	}
 
 	:global(.mobile) .close {

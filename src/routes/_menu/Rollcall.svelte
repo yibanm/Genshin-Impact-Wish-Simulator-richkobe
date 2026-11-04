@@ -22,13 +22,17 @@
 	import ModalTpl from '$lib/components/ModalTpl.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import RollcallEditor from './_rollcall-editor.svelte';
+	import { readNamesFile, pickNamesViaBridge, hasNativePicker } from '$lib/helpers/rollcall/import-txt';
+	import { addMembers } from '$lib/helpers/dataAPI/api-rollcall';
 
 	/**
 	 * 名单管理页（中文修改版新增）
 	 *
-	 * 上半部分：勾选启用哪些名单。可单选、可多选（多选则合并成一个池子），
-	 * 也可把预置名单全部取消勾选、只用自定义名单。
-	 * 下半部分：编辑选中的名单（增删条目、导入图标）。
+	 * 左半部分：勾选启用哪些名单 + 新建 / 导入 TXT 快捷入口。
+	 * 右半部分：编辑选中的名单（增删条目、改星级、导入图标）。
+	 *
+	 * F3（2026-11-04）：预置角色/武器名单已全部删除，只剩用户自建名单，
+	 * 因此不再有「角色/武器/我的」分组——单一列表即可，分组反而增加视觉噪音。
 	 */
 
 	// 进入页面时初始化（读取存储、清理失效勾选），并推送首次快照
@@ -37,35 +41,6 @@
 	$: rc = $rollcallStore;
 	$: lists = rc?.lists || [];
 	$: selected = rc?.selected || [];
-
-	// 分组：角色名单 / 武器名单 / 我的名单（自定义）。
-	// 池子来源不同（角色池、武器池、自导入池），分组展示更贴合「不同池子」的心智模型。
-	const groupOf = (list) => {
-		if (!list.builtin) return 'custom';
-		if (list.id.includes('char')) return 'char';
-		if (list.id.includes('weapon')) return 'weapon';
-		return 'char';
-	};
-	const groupMeta = [
-		{ key: 'char', labelKey: 'rollcall.groupChar' },
-		{ key: 'weapon', labelKey: 'rollcall.groupWeapon' },
-		{ key: 'custom', labelKey: 'rollcall.groupCustom' }
-	];
-	$: grouped = groupMeta
-		.map((g) => ({ ...g, items: lists.filter((l) => groupOf(l) === g.key) }))
-		.filter((g) => g.items.length > 0);
-
-	// 整组勾选/取消：组内全选或全不选
-	const toggleGroup = (group) => {
-		const ids = group.items.map((l) => l.id);
-		const allOn = ids.every((id) => selected.includes(id));
-		ids.forEach((id) => {
-			const isOn = selected.includes(id);
-			if (allOn && isOn) toggleSelect(id);
-			else if (!allOn && !isOn) toggleSelect(id);
-		});
-		pushToast({ message: $t('rollcall.poolReset'), type: '' });
-	};
 	// 正在编辑的名单 id，默认指向第一个已勾选的名单，没有则指向第一个名单
 	let editingId = '';
 	$: if (!editingId || !lists.some((l) => l.id === editingId)) {
@@ -138,6 +113,74 @@
 		}
 		nameModal = null;
 	};
+
+	// ---- F2：左栏「导入 TXT 名单」——选文件后直接建成一份新名单并打开编辑 ----
+	let txtFileInput;
+	let useNativePicker = false;
+	let txtImporting = false;
+	onMount(() => {
+		useNativePicker = hasNativePicker();
+	});
+
+	/** 把导入的条目落成一份新名单（名单名取文件名去扩展名） */
+	const createListFromMembers = (members, fileName) => {
+		if (!members || !members.length) {
+			pushToast({ message: $t('rollcall.txtEmptyFile'), type: 'error' });
+			return;
+		}
+		const label = (fileName || '').replace(/\.[^.]+$/, '') || $t('rollcall.importedList');
+		const id = createList(label);
+		const added = addMembers(id, members);
+		if (!added) {
+			pushToast({ message: $t('rollcall.txtEmptyFile'), type: 'error' });
+			return;
+		}
+		playSfx('click2');
+		editingId = id;
+		pushToast({
+			message: $t('rollcall.txtImported', { values: { count: added, name: fileName || '' } }),
+			type: 'success'
+		});
+	};
+
+	const handleNativeImportNew = async () => {
+		if (txtImporting) return;
+		txtImporting = true;
+		try {
+			const res = await pickNamesViaBridge();
+			if (res.canceled) return;
+			if (res.error) {
+				pushToast({ message: $t('rollcall.txtReadFailed', { values: { error: res.error } }), type: 'error' });
+				return;
+			}
+			createListFromMembers(res.members, res.fileName);
+		} catch (e) {
+			pushToast({ message: $t('rollcall.txtReadFailed', { values: { error: String(e?.message || e) } }), type: 'error' });
+		} finally {
+			txtImporting = false;
+		}
+	};
+
+	const handleTxtPickNew = async (event) => {
+		const file = event.target.files?.[0];
+		event.target.value = '';
+		if (!file || txtImporting) return;
+		txtImporting = true;
+		try {
+			const { members, fileName } = await readNamesFile(file);
+			createListFromMembers(members, fileName);
+		} catch (e) {
+			pushToast({ message: $t('rollcall.txtReadFailed', { values: { error: String(e?.message || e) } }), type: 'error' });
+		} finally {
+			txtImporting = false;
+		}
+	};
+
+	const handleImportTxtNew = () => {
+		playSfx();
+		if (useNativePicker) return handleNativeImportNew();
+		txtFileInput?.click();
+	};
 </script>
 
 {#if listToDelete}
@@ -178,10 +221,37 @@
 
 <div class="content-container" in:fade={{ duration: 200 }} style="--bg-icon:url('{$assets['modal-bg-icon.png']}')">
 	<div class="pane">
+		<!-- F1：标题独占一行；操作按钮单独一行横排（原先标题+按钮挤在 pane-head 里，
+		     窄屏下换行叠成一坨）。F2：TXT 导入放在左栏（名单列表侧），
+		     因为它是「新建一份名单」的入口，与右侧「编辑某份名单」职责不同。 -->
 		<div class="pane-head">
 			<h2>{$t('rollcall.selectTitle')}</h2>
-			<ButtonModal on:click={openCreate} width="auto">{$t('rollcall.newList')}</ButtonModal>
 		</div>
+		<div class="action-row">
+			<!-- 不传 width="auto"：ButtonModal 的图标是 absolute 定位不占宽度，
+			     auto 会让按钮收缩到纯文字宽（约 52px），居中文本与左侧图标重叠换行，
+			     视觉上就是「挤在一坨」。默认 200px 宽度才是为避开图标设计的。 -->
+			<ButtonModal on:click={openCreate}>{$t('rollcall.newList')}</ButtonModal>
+			<button
+				type="button"
+				class="txt-import"
+				class:disabled={txtImporting}
+				disabled={txtImporting}
+				on:click={handleImportTxtNew}
+			>
+				<i class="gi-plus" />
+				<span>{txtImporting ? $t('rollcall.txtImporting') : $t('rollcall.importTxt')}</span>
+			</button>
+		</div>
+		{#if !useNativePicker}
+			<input
+				type="file"
+				accept=".txt,.csv,.md,text/plain"
+				hidden
+				bind:this={txtFileInput}
+				on:change={handleTxtPickNew}
+			/>
+		{/if}
 		<p class="desc">{$t('rollcall.selectDesc')}</p>
 
 		<div class="pool-bar">
@@ -193,47 +263,35 @@
 		{#if !lists.length}
 			<div class="empty">{$t('rollcall.noLists')}</div>
 		{:else}
-			{#each grouped as group (group.key)}
-				<div class="group">
-					<div class="group-head">
-						<span class="group-label">{$t(group.labelKey)}</span>
-						<button class="link-btn" on:click={() => toggleGroup(group)}>
-							{$t('rollcall.groupSelectAll')}
-						</button>
-					</div>
-					<ul class="list-group">
-						{#each group.items as list (list.id)}
-							<li class="list-row" class:editing={editingId === list.id}>
-								<div class="row-main" on:click={() => openEditor(list.id)} on:keydown={() => {}} role="button" tabindex="0">
-									<span class="label" class:preset={list.builtin}>
-										{list.label}
-									</span>
-									<span class="count">{$t('rollcall.memberCount', { values: { count: list.count } })}</span>
-								</div>
+			<ul class="list-group">
+				{#each lists as list (list.id)}
+					<li class="list-row" class:editing={editingId === list.id}>
+						<div class="row-main" on:click={() => openEditor(list.id)} on:keydown={() => {}} role="button" tabindex="0">
+							<span class="label">
+								{list.label}
+							</span>
+							<span class="count">{$t('rollcall.memberCount', { values: { count: list.count } })}</span>
+						</div>
 
-								<div class="row-side">
-									<CheckBox
-										id={list.id}
-										checked={selected.includes(list.id)}
-										on:change={() => handleToggle(list.id)}
-									>
-										{$t('rollcall.enable')}
-									</CheckBox>
+						<div class="row-side">
+							<CheckBox
+								id={list.id}
+								checked={selected.includes(list.id)}
+								on:change={() => handleToggle(list.id)}
+							>
+								{$t('rollcall.enable')}
+							</CheckBox>
 
-									{#if !list.builtin}
-										<button class="icon-btn" title={$t('rollcall.renameList')} on:click={() => openRename(list)}>
-											<i class="gi-pen" />
-										</button>
-										<button class="icon-btn danger" title={$t('rollcall.deleteList')} on:click={() => askDelete(list)}>
-											<i class="gi-delete" />
-										</button>
-									{/if}
-								</div>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/each}
+							<button class="icon-btn" title={$t('rollcall.renameList')} on:click={() => openRename(list)}>
+								<i class="gi-pen" />
+							</button>
+							<button class="icon-btn danger" title={$t('rollcall.deleteList')} on:click={() => askDelete(list)}>
+								<i class="gi-delete" />
+							</button>
+						</div>
+					</li>
+				{/each}
+			</ul>
 		{/if}
 	</div>
 
@@ -289,6 +347,46 @@
 
 	.pane-head h2 {
 		margin: 0;
+	}
+
+	/* F1：操作按钮独占一行横排（原先与标题挤在 pane-head，窄屏换行叠成一坨） */
+	.action-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin: 0.4rem 0 0.2rem;
+	}
+
+	/* F2：左栏 TXT 导入按钮，样式与编辑器内同款（米色卡片配色，不引入新色系） */
+	.txt-import {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid #cfc3ab;
+		border-radius: 2rem;
+		background-color: #fffdf8;
+		color: rgba(0, 0, 0, 0.7);
+		font-family: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.txt-import:hover {
+		border-color: #e3a023;
+		color: #000;
+		background-color: #fff6e2;
+	}
+
+	.txt-import.disabled,
+	.txt-import:disabled {
+		opacity: 0.55;
+		cursor: default;
+	}
+
+	.txt-import i {
+		font-size: 0.9rem;
 	}
 
 	.name-form {
@@ -357,26 +455,6 @@
 	}
 
 	/* 分组：角色 / 武器 / 我的名单 */
-	.group {
-		margin-bottom: 0.6rem;
-	}
-
-	.group-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.15rem 0.2rem 0.25rem;
-		border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
-		margin-bottom: 0.2rem;
-	}
-
-	.group-label {
-		font-size: 0.8rem;
-		font-weight: 600;
-		color: rgba(0, 0, 0, 0.6);
-		letter-spacing: 0.05em;
-	}
-
 	.list-row {
 		display: flex;
 		align-items: center;
@@ -412,18 +490,6 @@
 	}
 
 	/* 预置名单加个标记，让用户知道这些是自动生成的、不可改名删除 */
-	.label.preset::after {
-		content: '预置';
-		font-size: 0.6rem;
-		font-weight: 400;
-		color: #fff;
-		background-color: #9bb0c9;
-		border-radius: 0.6rem;
-		padding: 0.05rem 0.35rem;
-		margin-left: 0.35rem;
-		vertical-align: middle;
-	}
-
 	.count {
 		font-size: 0.75rem;
 		color: rgba(0, 0, 0, 0.5);

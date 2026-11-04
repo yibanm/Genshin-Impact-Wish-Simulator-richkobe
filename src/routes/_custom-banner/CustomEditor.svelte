@@ -64,9 +64,10 @@
 		await idb.put(editedData);
 
 		// Update Store if banner is active
-		const { phase: activeID, patch } = $activeVersion;
-		if (!(patch.match('local') && activeID === bannerID)) return;
-		$bannerList[0] = { ...editedData, type: 'character-event' };
+		// C1 重构后自定义池是列表里的一个页签（type: 'custom'），不再固定在 index 0
+		const index = $bannerList.findIndex((b) => b.type === 'custom');
+		if (index < 0) return;
+		$bannerList[index] = { ...editedData, type: 'custom' };
 		return;
 	};
 	$: autoSave(bannerData);

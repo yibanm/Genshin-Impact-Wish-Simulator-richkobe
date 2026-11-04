@@ -13,13 +13,13 @@
 		activeVersion,
 		multipull,
 		editorMode,
-		preloadVersion,
 		editID,
 		chronicledCourse
 	} from '$lib/store/app-stores';
 	import { playSfx } from '$lib/helpers/audio/audio';
 	import { isNewOutfitReleased } from '$lib/helpers/outfit';
 	import { localBanner } from '$lib/helpers/banner-custom';
+	import { switchToCustom } from '$lib/helpers/banner-loader';
 	import { pushToast } from '$lib/helpers/toast';
 
 	import Icon from '$lib/components/Icon.svelte';
@@ -65,10 +65,12 @@
 	const finishAndWish = async () => {
 		playSfx();
 		const isComplete = await localBanner.isComplete($editID);
-		if (isComplete) return preloadVersion.set({ patch: 'Custom', phase: $editID });
+		// C2：编辑完成后把自定义池作为页签追加到官方池后面并直接切过去，
+		// 不再走 preloadVersion 整页重载（重载会回到默认官方版本，页签不保留）
+		if (isComplete) return switchToCustom($editID);
 
 		// Benner not Complete
-		const toastMsg = $t('customBanner.completeAllField');
+		const toastMsg = $t('customBanner.completeRequired');
 		pushToast({ message: toastMsg, type: 'error' });
 		return;
 	};

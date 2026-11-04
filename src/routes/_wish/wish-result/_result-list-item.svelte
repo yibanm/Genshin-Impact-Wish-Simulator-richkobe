@@ -45,12 +45,13 @@
 	<div class="zoomist-container item-body {weaponType || ''}">
 		<div class="zoomist-wrapper item-content" style="--bg: url({$assets['resultcard-bg.webp']})">
 			{#if type === 'member'}
-				<!-- 中文修改版：点名结果。有图标显示图标，无图标显示姓名首字 -->
+				<!-- 中文修改版：点名结果。有图标显示图标；无图标显示**完整姓名**，
+				     竖排 + 毛笔字体（F10，用户要求不显示缩略的首字） -->
 				<div class="zoomist-image member-cell">
 					{#if iconUrl}
 						<img src={iconUrl} alt={chineseChar || name} class="wishpic member-pic" />
 					{:else}
-						<span class="member-initial">{(chineseChar || name || '').slice(0, 1)}</span>
+						<span class="member-vertical">{chineseChar || name || ''}</span>
 					{/if}
 				</div>
 			{:else if custom}
@@ -253,17 +254,24 @@
 	}
 
 	/* 无图标的名单成员：显示姓名首字，底色按星级区分 */
-	.member-initial {
-		width: 70%;
-		aspect-ratio: 1/1;
-		border-radius: 50%;
-		background-color: rgba(255, 255, 255, 0.85);
-		color: #4a3b2a;
+	/* F10：无图标的名单成员显示完整姓名，竖排 + 毛笔字体（马善政楷书，OFL-1.1）。
+	   竖排从右往左读（vertical-rl），长名字自动换列不会溢出格子。 */
+	.member-vertical {
+		width: 78%;
+		height: 86%;
+		border-radius: 0.4rem;
+		background-color: rgba(255, 255, 255, 0.88);
+		color: #3a2c1a;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 2.2rem;
-		font-weight: 700;
+		writing-mode: vertical-rl;
+		font-family: 'MaShanZheng', var(--gi-zh-font);
+		font-size: 1.5rem;
+		line-height: 1.35;
+		letter-spacing: 0.12em;
+		overflow: hidden;
+		padding: 0.3rem 0;
 	}
 
 	.member-name {

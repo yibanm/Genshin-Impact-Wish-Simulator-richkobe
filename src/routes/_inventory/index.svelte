@@ -17,6 +17,7 @@
 	import Footer from './_footer.svelte';
 	import InventoryList from './_inventory-list.svelte';
 	import InventoryDetail from './_inventory-detail.svelte';
+	import Search from './_search.svelte';
 	import { cookie } from '$lib/helpers/dataAPI/api-cookie';
 
 	let headerHeight = 0;
@@ -60,6 +61,11 @@
 		showInventoryDetail = false;
 	};
 	setContext('closeDetail', closeDetail);
+
+	// G1：仓库页搜索浮层开关（按钮在 _header 左上角）
+	let showSearch = false;
+	setContext('openSearch', () => (showSearch = true));
+	setContext('closeSearch', () => (showSearch = false));
 </script>
 
 <svelte:head>
@@ -68,6 +74,10 @@
 
 {#if showInventoryDetail}
 	<InventoryDetail {...detailItem} />
+{/if}
+
+{#if showSearch}
+	<Search />
 {/if}
 
 <section id="inventory">

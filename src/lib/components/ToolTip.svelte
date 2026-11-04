@@ -42,8 +42,7 @@
 		opacity: 0;
 		transition: opacity 0.25s;
 		pointer-events: none;
-		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
-			Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	.tooltip:hover .tooltiptext {

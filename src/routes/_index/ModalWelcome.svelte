@@ -14,6 +14,12 @@
 	let content;
 	let contentHeight;
 
+	// E2：「不再提示」勾选框。勾上后确认时写入 localStorage，下次启动不弹本窗。
+	// 键独立于 WishSimulator.App 主存储，避免与数据导入导出/重置逻辑耦合
+	// （storage-reset 会保留 export 字段，但不应顺带重置用户的「不再提示」选择）。
+	const HIDE_KEY = 'giws-hide-welcome';
+	let dontShowAgain = false;
+
 	const startApp = getContext('startApp');
 	const updates = data.filter(({ featured }) => !!featured);
 
@@ -23,6 +29,14 @@
 
 	const handleConfirm = () => {
 		playSfx();
+		if (dontShowAgain) {
+			try {
+				localStorage.setItem(HIDE_KEY, '1');
+			} catch (e) {
+				// 隐私模式等写不进去的场景：静默降级为每次都提示，不影响进入应用
+				console.error('写入「不再提示」失败：', e);
+			}
+		}
 		startApp();
 	};
 </script>
@@ -32,6 +46,7 @@
 		<p class="sp">
 			{$t('fanmade')} <br />
 			{#if !$isPWA}
+				<!-- E1：文案从「安装到主屏幕/桌面的教程」改为「使用教程」 -->
 				<a href="/install">{$t('installInstruction')}</a>
 			{/if}
 		</p>
@@ -54,7 +69,12 @@
 				<div style="height: .5rem" />
 			</div>
 		{/if}
-		<p class="credit">{$t('disclaimer')}</p>
+		<!-- E2：原「本网站所有资源归米哈游所有」改为「不再提示」勾选框。
+		     勾选并确认后，下次启动不再弹本窗（localStorage 记忆）。 -->
+		<label class="dont-show">
+			<input type="checkbox" bind:checked={dontShowAgain} />
+			<span>{$t('dontShowAgain')}</span>
+		</label>
 	</section>
 </Modal>
 
@@ -64,14 +84,28 @@
 		height: 100%;
 		padding: 0 1.5rem;
 	}
-	.credit {
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	/* E2：不再提示勾选框，跟随弹窗米色面板配色 */
+	.dont-show {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.4rem 0 0.2rem;
 		font-size: 0.9rem;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.dont-show input {
+		width: 1rem;
+		height: 1rem;
+		accent-color: #e3a023;
+		cursor: pointer;
 	}
 
 	.updates {
 		text-align: left;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		background-color: #fff;
 		font-size: 0.97rem;
 		height: calc(0.7 * var(--modalHeight));
@@ -138,7 +172,7 @@
 	.sp a {
 		font-weight: bold;
 		color: #e3a023;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	a:active {

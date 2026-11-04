@@ -317,7 +317,7 @@
 		font-weight: bold;
 		color: #fff;
 		font-size: calc(0.035 * var(--content-height));
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		text-shadow: 0 0 calc(0.05 * var(--content-height)) #000;
 	}
 </style>

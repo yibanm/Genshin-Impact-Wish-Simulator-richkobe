@@ -114,11 +114,16 @@
 
 	.member-text span {
 		color: #fff;
+		/* F10：毛笔字体 + 竖排（用户要求「特色的毛笔字体竖着排列」，不缩略）。
+		   竖排从右往左；长名字自动换列，不会横向溢出画面。 */
+		writing-mode: vertical-rl;
+		font-family: 'MaShanZheng', var(--gi-zh-font);
 		font-size: 5rem;
-		font-weight: 700;
+		font-weight: 400;
 		-webkit-text-stroke: 0.06rem #000;
 		filter: drop-shadow(0 0.3rem 0.6rem rgba(0, 0, 0, 0.6));
-		letter-spacing: 0.15rem;
+		letter-spacing: 0.35rem;
+		max-height: 90%;
 	}
 
 	img {

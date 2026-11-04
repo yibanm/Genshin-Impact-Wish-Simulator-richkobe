@@ -169,7 +169,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	.fileName span {

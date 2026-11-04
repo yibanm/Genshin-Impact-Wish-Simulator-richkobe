@@ -30,7 +30,13 @@
 				class="art-bg"
 			/>
 			{#key artPosition}
-				<BannerArt artURL={src} bannerPosition={artPosition?.banner} {rateup} />
+				<!-- C4 放宽必填后 artURL 可能为空：空 src 会渲染破图图标，
+				     用元素底色兜底（米金渐变与卡面背景同色系），不显示破图 -->
+				{#if src}
+					<BannerArt artURL={src} bannerPosition={artPosition?.banner} {rateup} />
+				{:else}
+					<div class="art-missing" />
+				{/if}
 			{/key}
 		{:else}
 			<picture style="position: relative; width: 100%; overflow: hidden">
@@ -41,6 +47,13 @@
 </div>
 
 <style>
+	/* C4 放宽必填后自定义池可能没有上传立绘：用米金渐变占位，避免破图图标 */
+	.art-missing {
+		width: 100%;
+		height: 100%;
+		background-image: linear-gradient(to top, #eee8e3 50%, #f7f5f4);
+	}
+
 	picture,
 	img {
 		width: 100%;

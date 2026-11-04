@@ -9,7 +9,11 @@ export const localBanner = {
 	isComplete: async (itemID) => {
 		const { character, images, rateup = [], bannerName } = (await idb.get(itemID)) || {};
 		const { artURL } = images || {};
-		const complete = !!artURL && !!character && rateup.length > 0 && !!bannerName;
+		// C4 放宽：不再强制填完所有字段。真正必需的是「池名 + 至少一个 UP 角色」——
+		// 池名是页签与卡面的标识，rateup 是抽卡表（空则五星无物可出）。
+		// 立绘 artURL 与角色名 character 纯装饰：缺失时卡面用米金渐变占位、
+		// 页签用原石星图标兜底，不影响抽卡功能。
+		const complete = rateup.length > 0 && !!bannerName;
 		return complete;
 	},
 

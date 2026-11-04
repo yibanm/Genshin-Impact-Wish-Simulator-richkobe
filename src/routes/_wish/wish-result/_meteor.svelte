@@ -110,7 +110,9 @@
 	}
 	.meteor-wrapper.show {
 		display: block;
-		background-color: #fff;
+		/* 黑底而非白底：流星动画本身是深色星空，白底会在视频解码启动前硬闪一下
+		   （安卓 WebView 解码慢，白闪尤其明显），黑底过渡自然 */
+		background-color: #000;
 		opacity: 1;
 	}
 	.video {
@@ -121,8 +123,9 @@
 
 	.skip {
 		position: absolute;
-		top: 30px;
-		right: 2%;
+		/* B2 安全边距：跳过按钮避开挖孔/圆角，否则横屏时压在孔位上不好点 */
+		top: calc(30px + var(--sat));
+		right: calc(2% + var(--sar));
 		color: #fff;
 		font-size: 1.2rem;
 		z-index: 10;
@@ -137,8 +140,9 @@
 
 	:global(.mobile) .skip {
 		font-size: 0.8rem;
-		top: 0.3rem;
-		right: 6%;
+		/* 这条会覆盖上面的 .skip（安卓横屏下 mobileMode 为真），必须同样叠加安全区 */
+		top: calc(0.3rem + var(--sat));
+		right: calc(6% + var(--sar));
 	}
 	video {
 		display: none;

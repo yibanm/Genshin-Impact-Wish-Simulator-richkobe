@@ -32,6 +32,8 @@ release/
 .art*.json
 .patch-resp.json
 .repo-check.json
+# 运行时验证截图（PrintWindow 抓 Tauri 窗口，1MB 级，不入库）
+.tauri-runtime.png
 build-out.log
 eb-local.log
 android/key.properties

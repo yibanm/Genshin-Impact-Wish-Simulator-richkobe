@@ -255,7 +255,7 @@
 	}
 
 	.copy span {
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		display: inline-block;
 		width: 200rem;
 		max-width: 30vw;

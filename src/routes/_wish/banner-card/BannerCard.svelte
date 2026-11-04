@@ -74,7 +74,10 @@
 	</div>
 	<div class="front">
 		<!-- Custom Banner -->
-		{#if $isCustomBanner}
+		<!-- C1 重构：自定义池现在是列表里的一个页签（type: 'custom'），
+		     不再依赖全局 isCustomBanner 模式开关——那个开关切页签不复位，
+		     会导致切到官方池后卡面仍按自定义数据渲染 -->
+		{#if type === 'custom'}
 			<BannerImage
 				custom
 				src={images?.artURL}

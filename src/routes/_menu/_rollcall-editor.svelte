@@ -3,7 +3,6 @@
 	import { fade } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
 
-	import { assets } from '$lib/store/app-stores';
 	import { playSfx } from '$lib/helpers/audio/audio';
 	import { pushToast } from '$lib/helpers/toast';
 	import {
@@ -11,37 +10,38 @@
 		addMembers,
 		removeMember,
 		renameMember,
+		setMemberRarity,
 		setMemberIcon,
 		clearMemberIcon,
 		ICON_MAX_BYTES
 	} from '$lib/helpers/dataAPI/api-rollcall';
 
 	import ButtonModal from '$lib/components/ButtonModal.svelte';
+	import ModalTpl from '$lib/components/ModalTpl.svelte';
 	import { memberDisplayName } from '$lib/helpers/rollcall/display';
 	import {
 		readNamesFile,
 		pickNamesViaBridge,
-		hasNativePicker
+		hasNativePicker,
+		parseMembers
 	} from '$lib/helpers/rollcall/import-txt';
 
 	/**
 	 * 名单编辑器（中文修改版新增）
 	 *
-	 * 预置名单只读（内容由游戏数据自动生成，不可增删改，因此始终与游戏数据同步），
-	 * 自定义名单可增删改，并支持为单条导入图标。
+	 * F3（2026-11-04）后预置名单已删除，本编辑器只服务用户自建名单。
 	 *
-	 * 自定义名单的三种录入方式：
-	 * 1. 批量粘贴（下方 textarea，一人一行）
-	 * 2. 导入 TXT 文件（一人一行）：Electron 壳走系统原生文件对话框，
-	 *    Web 走隐藏 <input type="file">，两者共用 import-txt.js 的解析与编码兜底
-	 * 3. 逐条重命名 / 删除 / 换图标
+	 * 四种录入方式（F6/F7/F8 按用户要求拆分入口）：
+	 * 1. 「添加」按钮：小弹窗，输入名字 + 选星级 + 选图像（单条）
+	 * 2. 「批量添加」按钮：弹窗内多行粘贴，支持「名字 空格 星级」格式
+	 * 3. 「导入 TXT」按钮：文件导入，与批量添加同解析规则（含星级后缀）
+	 * 4. 列表内逐条：改名 / 改星级 / 换图标 / 删除（F4：编辑不止重命名）
 	 */
 
 	export let listId = '';
 
 	let items = [];
 	let listLabel = '';
-	let isBuiltin = false;
 
 	// 批量导入的多行文本
 	let bulkText = '';
@@ -49,15 +49,17 @@
 	let renamingUid = '';
 	let renamingValue = '';
 
+	// F7：单条添加小弹窗状态 { name, rarity, iconBlob }
+	let addModal = null;
+	// F6：批量添加弹窗状态（复用 bulkText）
+	let bulkModal = false;
+
 	// 图标 blob → objectURL 的缓存，避免每次渲染都重新读取 IndexedDB
 	const iconUrls = new Map();
 	let loadedIcons = {};
 
 	const loadItems = async () => {
 		items = getListItems(listId);
-		// 名单标签与类型从主页面传入的 store 里查太重，这里直接从条目反推：
-		// 预置名单的条目带 iconType 字段，自定义名单的带 iconKey 字段
-		isBuiltin = items.length > 0 && items.every((it) => !!it.iconType);
 		await loadIcons();
 	};
 
@@ -80,32 +82,79 @@
 		if (changed) loadedIcons = {}; // 触发响应式重算
 	};
 
-	// 每条的图标地址：自定义图标优先，其次预置素材
+	// 每条的图标地址：用户导入的自定义图标（F3 后无预置素材分支）
 	const iconOf = (item) => {
 		if (item.iconKey) return iconUrls.get(item.iconKey) || null;
-		if (!item.name) return null;
-		const map = $assets || {};
-		if (item.iconType === 'char') return map[`face/${item.name}`] || null;
-		if (item.iconType === 'weapon') return map[item.name] || null;
 		return null;
 	};
 
 	onMount(loadItems);
 	$: if (listId) loadItems();
 
-	// 显示名：预置名单查语言包取中文名，自定义名单显示录入名（逻辑集中在 display.js）
-	const displayName = (item) => memberDisplayName(item, $t);
+	// 显示名：录入内容即显示内容（逻辑集中在 display.js）
+	const displayName = (item) => memberDisplayName(item);
 
+	// F6：批量添加走弹窗，解析规则与 TXT 导入一致（含「名字 空格 星级」）
 	const handleBulkAdd = () => {
-		const lines = bulkText.split(/\r?\n/);
-		const added = addMembers(listId, lines);
+		const members = parseMembers(bulkText);
+		const added = addMembers(listId, members);
 		if (!added) {
 			pushToast({ message: $t('rollcall.emptyInput'), type: 'error' });
 			return;
 		}
 		playSfx('click2');
 		bulkText = '';
+		bulkModal = false;
 		pushToast({ message: $t('rollcall.added', { values: { count: added } }), type: 'success' });
+		loadItems();
+	};
+
+	// F7：单条添加（小弹窗：名字 + 星级 + 图像）
+	const openAddModal = () => {
+		playSfx();
+		addModal = { name: '', rarity: null, iconBlob: null, iconPreview: '' };
+	};
+	const cancelAddModal = () => (addModal = null);
+	const confirmAddModal = () => {
+		const name = (addModal?.name || '').trim();
+		if (!name) {
+			pushToast({ message: $t('rollcall.emptyInput'), type: 'error' });
+			return;
+		}
+		const added = addMembers(listId, [{ name, rarity: addModal.rarity }]);
+		if (!added) return;
+		// 单条添加带图标：先取刚加入的条目 uid 再挂图标
+		if (addModal.iconBlob) {
+			const fresh = getListItems(listId);
+			const last = fresh[fresh.length - 1];
+			if (last) {
+				setMemberIcon(listId, last.uid, addModal.iconBlob).catch((e) => {
+					pushToast({ message: $t('rollcall.iconFailed'), type: 'error' });
+					console.error(e);
+				});
+			}
+		}
+		playSfx('click2');
+		addModal = null;
+		pushToast({ message: $t('rollcall.added', { values: { count: added } }), type: 'success' });
+		loadItems();
+	};
+	const pickAddIcon = (event) => {
+		const file = event.target.files?.[0];
+		event.target.value = '';
+		if (!file || !addModal) return;
+		if (file.size > ICON_MAX_BYTES) {
+			pushToast({ message: $t('rollcall.iconTooLarge'), type: 'error' });
+			return;
+		}
+		addModal.iconBlob = file;
+		addModal.iconPreview = URL.createObjectURL(file);
+	};
+
+	// F4：列表内改星级（3/4/5 或取消指定）
+	const handleSetRarity = (item, rarity) => {
+		playSfx('click2');
+		setMemberRarity(listId, item.uid, rarity);
 		loadItems();
 	};
 
@@ -123,13 +172,13 @@
 		useNativePicker = hasNativePicker();
 	});
 
-	/** 把解析出的姓名写入当前名单并提示结果 */
-	const applyImportedNames = (names, fileName) => {
-		if (!names || !names.length) {
+	/** 把解析出的条目（含星级）写入当前名单并提示结果 */
+	const applyImportedMembers = (members, fileName) => {
+		if (!members || !members.length) {
 			pushToast({ message: $t('rollcall.txtEmptyFile'), type: 'error' });
 			return;
 		}
-		const added = addMembers(listId, names);
+		const added = addMembers(listId, members);
 		if (!added) {
 			pushToast({ message: $t('rollcall.txtEmptyFile'), type: 'error' });
 			return;
@@ -157,7 +206,7 @@
 				});
 				return;
 			}
-			applyImportedNames(res.names, res.fileName);
+			applyImportedMembers(res.members, res.fileName);
 		} catch (e) {
 			pushToast({
 				message: $t('rollcall.txtReadFailed', { values: { error: String(e?.message || e) } }),
@@ -176,8 +225,8 @@
 		if (txtImporting) return;
 		txtImporting = true;
 		try {
-			const { names, fileName } = await readNamesFile(file);
-			applyImportedNames(names, fileName);
+			const { members, fileName } = await readNamesFile(file);
+			applyImportedMembers(members, fileName);
 		} catch (e) {
 			pushToast({
 				message: $t('rollcall.txtReadFailed', { values: { error: String(e?.message || e) } }),
@@ -252,53 +301,106 @@
 <div class="editor">
 	<div class="editor-head">
 		<h3>
-			{isBuiltin ? $t('rollcall.presetList') : $t('rollcall.customList')}
+			{$t('rollcall.customList')}
 			<span class="badge">{$t('rollcall.memberCount', { values: { count: items.length } })}</span>
 		</h3>
 	</div>
 
-	{#if isBuiltin}
-		<p class="tip">{$t('rollcall.presetTip')}</p>
-	{:else}
-		<div class="bulk-add">
-			<textarea
-				bind:value={bulkText}
-				placeholder={$t('rollcall.bulkPlaceholder')}
-				rows="3"
-			/>
-			<div class="bulk-actions">
-				<button
-					type="button"
-					class="txt-import"
-					class:disabled={txtImporting}
-					disabled={txtImporting}
-					on:click={handleTxtImport}
-				>
-					<i class="gi-upload" />
-					<span>{txtImporting ? $t('rollcall.txtImporting') : $t('rollcall.importTxt')}</span>
-				</button>
-				<ButtonModal on:click={handleBulkAdd} disabled={!bulkText.trim()}>
-					{$t('rollcall.bulkAdd')}
-				</ButtonModal>
-			</div>
-			<p class="tip">{$t('rollcall.txtTip')}</p>
-		</div>
+	<!-- F6/F7/F8：三个录入入口各自独立按钮，不再把 textarea 常驻在页面上
+	     （常驻 textarea 是「新建名单按钮挤在一坨」观感的来源之一）。
+	     单条添加与批量添加各走一个弹窗，TXT 导入直接触发文件选择。 -->
+	<div class="action-bar">
+		<ButtonModal on:click={openAddModal}>{$t('rollcall.addOne')}</ButtonModal>
+		<ButtonModal on:click={() => (bulkModal = true)}>{$t('rollcall.bulkAdd')}</ButtonModal>
+		<button
+			type="button"
+			class="txt-import"
+			class:disabled={txtImporting}
+			disabled={txtImporting}
+			on:click={handleTxtImport}
+		>
+			<i class="gi-plus" />
+			<span>{txtImporting ? $t('rollcall.txtImporting') : $t('rollcall.importTxt')}</span>
+		</button>
+	</div>
+	<p class="tip">{$t('rollcall.txtTip')}</p>
 
-		<!-- Web 通道用的隐藏文件选择器；Electron 壳走主进程对话框，不需要它。
-		     独立放置而非嵌在 label 内，避免 label 点击同时触发原生选择与 on:click 造成弹两次框 -->
-		{#if !useNativePicker}
-			<input
-				type="file"
-				accept=".txt,.csv,.md,text/plain"
-				hidden
-				bind:this={txtFileInput}
-				on:change={handleTxtPick}
-			/>
-		{/if}
+	<!-- Web 通道用的隐藏文件选择器；Electron 壳走主进程对话框，不需要它。
+	     独立放置而非嵌在 label 内，避免 label 点击同时触发原生选择与 on:click 造成弹两次框 -->
+	{#if !useNativePicker}
+		<input
+			type="file"
+			accept=".txt,.csv,.md,text/plain"
+			hidden
+			bind:this={txtFileInput}
+			on:change={handleTxtPick}
+		/>
+	{/if}
+
+	<!-- F7：单条添加小弹窗（名字 + 星级 + 图像） -->
+	{#if addModal}
+		<ModalTpl title={$t('rollcall.addOne')} on:confirm={confirmAddModal} on:cancel={cancelAddModal}>
+			<div class="add-form">
+				<label for="rollcall-add-name">{$t('rollcall.memberNameLabel')}</label>
+				<!-- svelte-ignore a11y-autofocus -->
+				<input
+					id="rollcall-add-name"
+					type="text"
+					bind:value={addModal.name}
+					placeholder={$t('rollcall.memberNamePlaceholder')}
+					autofocus
+					on:keydown={(e) => e.key === 'Enter' && confirmAddModal()}
+				/>
+
+				<span class="field-label">{$t('rollcall.rarityLabel')}</span>
+				<div class="rarity-picker">
+					{#each [null, 3, 4, 5] as r}
+						<button
+							type="button"
+							class="rarity-opt"
+							class:on={addModal.rarity === r}
+							on:click={() => (addModal.rarity = r)}
+						>
+							{#if r === null}
+								{$t('rollcall.rarityRandom')}
+							{:else}
+								{#each Array(r) as _, i (i)}<i class="gi-star" />{/each}
+							{/if}
+						</button>
+					{/each}
+				</div>
+
+				<span class="field-label">{$t('rollcall.iconLabel')}</span>
+				<div class="icon-pick">
+					{#if addModal.iconPreview}
+						<img src={addModal.iconPreview} alt="icon preview" class="icon-preview" />
+					{:else}
+						<span class="thumb placeholder"><i class="gi-user" /></span>
+					{/if}
+					<label class="icon-btn" title={$t('rollcall.setIcon')}>
+						<i class="gi-picture" />
+						<input type="file" accept="image/*" hidden on:change={pickAddIcon} />
+					</label>
+				</div>
+			</div>
+		</ModalTpl>
+	{/if}
+
+	<!-- F6：批量添加弹窗（多行粘贴，支持「名字 空格 星级」） -->
+	{#if bulkModal}
+		<ModalTpl title={$t('rollcall.bulkAdd')} on:confirm={handleBulkAdd} on:cancel={() => (bulkModal = false)}>
+			<div class="bulk-add">
+				<textarea
+					bind:value={bulkText}
+					placeholder={$t('rollcall.bulkPlaceholder')}
+					rows="6"
+				/>
+			</div>
+		</ModalTpl>
 	{/if}
 
 	{#if !items.length}
-		<div class="empty">{isBuiltin ? $t('rollcall.noData') : $t('rollcall.noMembers')}</div>
+		<div class="empty">{$t('rollcall.noMembers')}</div>
 	{:else}
 		<ul class="members" in:fade={{ duration: 150 }}>
 			{#each items as item (item.uid)}
@@ -333,30 +435,42 @@
 						</span>
 					{/if}
 
-					{#if !isBuiltin}
-						<span class="ops">
-							<label class="icon-btn" title={$t('rollcall.setIcon')}>
-								<i class="gi-picture" />
-								<input
-									type="file"
-									accept="image/*"
-									hidden
-									on:change={(e) => handleIconPick(item, e)}
-								/>
-							</label>
-							{#if item.iconKey}
-								<button class="icon-btn" title={$t('rollcall.clearIcon')} on:click={() => handleClearIcon(item)}>
-									<i class="gi-close" />
+					<!-- F4：所有条目都可改（改名/改星级/换图标/删除），不再有只读名单 -->
+					<span class="ops">
+						<!-- F5：星级快捷改。当前星级高亮，点「随机」清除指定 -->
+						<span class="rarity-ops" title={$t('rollcall.rarityLabel')}>
+							{#each [3, 4, 5] as r}
+								<button
+									type="button"
+									class="rarity-btn"
+									class:on={item.rarity === r}
+									on:click={() => handleSetRarity(item, item.rarity === r ? null : r)}
+								>
+									{r}
 								</button>
-							{/if}
-							<button class="icon-btn" title={$t('rollcall.rename')} on:click={() => startRename(item)}>
-								<i class="gi-pen" />
-							</button>
-							<button class="icon-btn danger" title={$t('rollcall.delete')} on:click={() => handleRemove(item)}>
-								<i class="gi-delete" />
-							</button>
+							{/each}
 						</span>
-					{/if}
+						<label class="icon-btn" title={$t('rollcall.setIcon')}>
+							<i class="gi-picture" />
+							<input
+								type="file"
+								accept="image/*"
+								hidden
+								on:change={(e) => handleIconPick(item, e)}
+							/>
+						</label>
+						{#if item.iconKey}
+							<button class="icon-btn" title={$t('rollcall.clearIcon')} on:click={() => handleClearIcon(item)}>
+								<i class="gi-close" />
+							</button>
+						{/if}
+						<button class="icon-btn" title={$t('rollcall.rename')} on:click={() => startRename(item)}>
+							<i class="gi-pen" />
+						</button>
+						<button class="icon-btn danger" title={$t('rollcall.delete')} on:click={() => handleRemove(item)}>
+							<i class="gi-delete" />
+						</button>
+					</span>
 				</li>
 			{/each}
 		</ul>
@@ -406,6 +520,112 @@
 		flex-direction: column;
 		gap: 0.4rem;
 		margin: 0.5rem 0 0.7rem;
+	}
+
+	/* F6/F7/F8：三个录入入口横排一行，间距统一，不挤在一起 */
+	.action-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin: 0.5rem 0 0.3rem;
+	}
+
+	/* F7 单条添加弹窗表单 */
+	.add-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.add-form input[type='text'] {
+		border: 1px solid #cfc3ab;
+		border-radius: 0.4rem;
+		padding: 0.4rem 0.6rem;
+		font-family: inherit;
+		font-size: 0.95rem;
+		background-color: #fffdf8;
+	}
+
+	.field-label {
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.6);
+		margin-top: 0.3rem;
+	}
+
+	.rarity-picker {
+		display: flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
+	.rarity-opt {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.1rem;
+		padding: 0.25rem 0.6rem;
+		border: 1px solid #cfc3ab;
+		border-radius: 2rem;
+		background-color: #fffdf8;
+		color: rgba(0, 0, 0, 0.7);
+		font-family: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.rarity-opt.on {
+		border-color: #e3a023;
+		background-color: #fff0cc;
+		color: #000;
+	}
+
+	.rarity-opt i {
+		color: #e3a023;
+		font-size: 0.8rem;
+	}
+
+	.icon-pick {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+
+	.icon-preview {
+		width: 2.6rem;
+		height: 2.6rem;
+		object-fit: contain;
+		border-radius: 0.4rem;
+		background-color: #fffdf8;
+		border: 1px solid #cfc3ab;
+	}
+
+	.thumb.placeholder {
+		background-color: #fffdf8;
+	}
+
+	/* F4/F5：列表内星级快捷改（3/4/5 三枚小按钮，当前星级高亮） */
+	.rarity-ops {
+		display: inline-flex;
+		gap: 0.15rem;
+		margin-right: 0.3rem;
+	}
+
+	.rarity-btn {
+		min-width: 1.3rem;
+		height: 1.3rem;
+		border: 1px solid #cfc3ab;
+		border-radius: 0.3rem;
+		background-color: #fffdf8;
+		color: rgba(0, 0, 0, 0.55);
+		font-family: inherit;
+		font-size: 0.72rem;
+		cursor: pointer;
+	}
+
+	.rarity-btn.on {
+		border-color: #e3a023;
+		background-color: #e3a023;
+		color: #fff;
 	}
 
 	textarea {

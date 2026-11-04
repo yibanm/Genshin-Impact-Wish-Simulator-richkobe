@@ -1,0 +1,53 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "原神抽卡点名器",
+  "version": "1.0.1",
+  "identifier": "com.richkobe.genshinwishroll",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5199",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "原神抽卡点名器",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 520,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "category": "Game",
+    "shortDescription": "原神抽卡模拟与多名单点名器（中文修改版，完全离线）",
+    "longDescription": "基于开源项目 Genshin Impact Wish Simulator（MIT）二次开发的中文修改版：新增多名单点名功能，移除全部广告与赞赏入口，全中文界面，可完全离线使用。游戏素材版权归 miHoYo / HoYoverse 所有。",
+    "copyright": "基于 Genshin Impact Wish Simulator（MIT）二次开发；游戏素材版权归 miHoYo / HoYoverse 所有",
+    "publisher": "richkobe",
+    "homepage": "https://github.com/yibanm/Genshin-Impact-Wish-Simulator-richkobe",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "languages": ["SimpChinese"],
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
+  }
+}

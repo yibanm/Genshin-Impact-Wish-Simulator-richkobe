@@ -1,15 +1,15 @@
 {
   "name": "genshin-wish-roll",
   "description": "原神抽卡点名器 — 中文修改版（多名单点名 + 全中文界面）",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "richkobe"
   },
   "repository": {
-    "url": "https://github.com/AguzzTN54/Genshin-Impact-Wish-Simulator"
+    "url": "https://github.com/yibanm/Genshin-Impact-Wish-Simulator-richkobe"
   },
   "license": "MIT",
-  "homepage": "https://wishsimulator.app",
+  "homepage": "https://github.com/yibanm/Genshin-Impact-Wish-Simulator-richkobe",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -18,6 +18,9 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
     "format": "prettier --plugin-search-dir . --write .",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "electron:start": "electron .",
     "dist:win": "electron-builder --config electron-builder.yml --win"
   },
@@ -27,6 +30,7 @@
     "@capacitor/core": "^8.6.0",
     "@sveltejs/adapter-static": "2.0.3",
     "@sveltejs/kit": "1.30.4",
+    "@tauri-apps/cli": "^2.12.4",
     "autoprefixer": "^10.4.8",
     "dotenv": "^16.3.1",
     "electron": "^45.2.1",
@@ -53,6 +57,12 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-fs": "^2.7.1",
     "file-saver": "^2.0.5",
     "hotkeys-js": "^3.12.0",
     "howler": "^2.2.3",

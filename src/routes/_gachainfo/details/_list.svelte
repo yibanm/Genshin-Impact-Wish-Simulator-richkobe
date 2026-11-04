@@ -183,7 +183,7 @@
 	:not(.v2) h3,
 	:not(.v2) .table .body .row {
 		vertical-align: middle;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	h3 {

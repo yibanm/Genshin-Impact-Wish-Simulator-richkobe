@@ -1,0 +1,29 @@
+[package]
+name = "genshin-wish-roll"
+version = "1.0.1"
+description = "原神抽卡点名器（中文修改版，完全离线）"
+authors = ["richkobe"]
+license = "MIT"
+repository = "https://github.com/yibanm/Genshin-Impact-Wish-Simulator-richkobe"
+edition = "2024"
+rust-version = "1.90"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.12.5", features = [] }
+tauri-plugin-log = "2"
+# 数据导出走原生「另存为」：WebView2 与安卓 WebView 一样不接管 <a download>，
+# 不装这两个插件的话从 Electron 迁过来会弄坏导出功能
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"

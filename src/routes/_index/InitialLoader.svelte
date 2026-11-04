@@ -175,7 +175,7 @@
 		position: absolute;
 		left: 50%;
 		transform: translateX(-50%);
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	.text.connecting::after {

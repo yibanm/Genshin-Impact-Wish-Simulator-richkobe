@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 import { AssetManager } from './api-indexeddb';
-import { builtinLists, builtinListById } from '../rollcall/presets';
 
 /**
  * 点名名单管理（中文修改版新增功能，上游没有）
@@ -10,8 +9,9 @@ import { builtinLists, builtinListById } from '../rollcall/presets';
  * - 自定义导入的图标：IndexedDB 的 assets store（复用 AssetManager，blob 不适合塞进 localStorage）
  * - 洗牌池进度：localStorage，保证刷新页面后不会重复点到同一个人
  *
- * 名单形态：预置名单（builtin，从游戏数据自动生成，带图标）+ 自定义名单（默认纯文字，可导入图标）。
- * 抽卡时可勾选启用多套，支持单选/多选/混用；也可全部不勾预置、只用自定义。
+ * 名单形态（F3，2026-11-04）：只有用户自建名单（导入 TXT / 批量添加 / 单条添加）。
+ * 预置角色/武器名单已按用户要求全部删除——点名场景的真实需求是「点自己的人」，
+ * 游戏角色名单与抽卡功能重复且占用界面。
  */
 
 const STORAGE_KEY = 'rollcall';
@@ -24,9 +24,9 @@ const ICON_KEY_PREFIX = 'rollcall-icon-';
 const defaults = () => ({
 	// 用户自建的名单列表
 	customLists: [],
-	// 当前勾选启用的名单 id 集合（预置 id 见 presets.js，自定义 id 形如 custom-<时间戳>）
-	// 默认全部勾选：开箱即用，点名卡池立刻有池子可抽；用户可在名单管理页取消勾选
-	selected: builtinLists.map((l) => l.id),
+	// 当前勾选启用的名单 id 集合。新建名单默认自动勾选（见 createList），
+	// 初始无名单时为空集
+	selected: [],
 	// 洗牌池：{ [listId]: [尚未被点到的条目 uid/name...] }，用于保证一轮内不重复
 	pool: {},
 	// 自增序号，避免 id 撞车
@@ -73,17 +73,10 @@ const commit = () => {
 };
 
 /**
- * 返回给 UI 的快照：预置名单（运行时生成，不落库）+ 自定义名单 + 勾选状态
- * 预置名单每次实时生成，因此游戏数据更新后名单自动同步，无需用户操作
+ * 返回给 UI 的快照：用户自建名单 + 勾选状态
  */
 const snapshot = () => {
 	const s = getState();
-	const preset = builtinLists.map(({ id, label, items }) => ({
-		id,
-		label,
-		builtin: true,
-		count: items.length
-	}));
 	const custom = s.customLists.map(({ id, label, items, createdAt }) => ({
 		id,
 		label,
@@ -92,7 +85,7 @@ const snapshot = () => {
 		createdAt
 	}));
 	return {
-		lists: [...preset, ...custom],
+		lists: custom,
 		selected: [...s.selected],
 		poolRemaining: Object.fromEntries(
 			Object.entries(s.pool).map(([k, v]) => [k, Array.isArray(v) ? v.length : 0])
@@ -103,11 +96,8 @@ const snapshot = () => {
 /** 初始化并推送首次快照（在应用启动时调用一次） */
 export const initRollcall = () => {
 	state = readState();
-	// 清理指向已不存在名单的勾选与池数据（例如用户删了某个自定义名单）
-	const validIds = new Set([
-		...builtinLists.map((l) => l.id),
-		...state.customLists.map((l) => l.id)
-	]);
+	// 清理指向已不存在名单的勾选与池数据（例如用户删了某个名单）
+	const validIds = new Set(state.customLists.map((l) => l.id));
 	const before = state.selected.length;
 	state.selected = state.selected.filter((id) => validIds.has(id));
 	Object.keys(state.pool).forEach((id) => {
@@ -118,10 +108,8 @@ export const initRollcall = () => {
 	return snapshot();
 };
 
-/** 取某份名单的全部条目（预置实时生成，自定义从存储读） */
+/** 取某份名单的全部条目 */
 export const getListItems = (listId) => {
-	const preset = builtinListById(listId);
-	if (preset) return preset.items.map((it, i) => ({ ...it, uid: `${listId}#${i}` }));
 	const s = getState();
 	const custom = s.customLists.find((l) => l.id === listId);
 	return custom ? custom.items : [];
@@ -130,7 +118,7 @@ export const getListItems = (listId) => {
 /** 勾选/取消勾选名单（可单选可多选，返回是否变更成功） */
 export const toggleSelect = (listId) => {
 	const s = getState();
-	const exists = builtinListById(listId) || s.customLists.some((l) => l.id === listId);
+	const exists = s.customLists.some((l) => l.id === listId);
 	if (!exists) return false;
 	const idx = s.selected.indexOf(listId);
 	if (idx >= 0) s.selected.splice(idx, 1);
@@ -153,11 +141,13 @@ export const createList = (label) => {
 	const s = getState();
 	const id = `custom-${Date.now()}-${s.seq++}`;
 	s.customLists.push({ id, label, builtin: false, items: [], createdAt: new Date().toISOString() });
+	// 新建即勾选：用户建名单就是为了马上用，还要手动勾一次是多余步骤
+	if (!s.selected.includes(id)) s.selected.push(id);
 	commit();
 	return id;
 };
 
-/** 重命名名单（仅自定义名单可改名，预置名单名固定） */
+/** 重命名名单 */
 export const renameList = (listId, label) => {
 	const s = getState();
 	const list = s.customLists.find((l) => l.id === listId);
@@ -189,29 +179,52 @@ export const deleteList = async (listId) => {
 	return true;
 };
 
-/** 批量添加条目（支持粘贴多行文本一次导入） */
+/**
+ * 批量添加条目。
+ * @param {string} listId 名单 id
+ * @param {Array<string|{name:string,rarity:number|null}>} names
+ *        字符串或带星级的对象（F5：TXT 的「张三 5」解析后传 {name:'张三', rarity:5}）
+ * @returns {number} 实际添加条数
+ */
 export const addMembers = (listId, names) => {
 	const s = getState();
 	const list = s.customLists.find((l) => l.id === listId);
 	if (!list) return 0;
 	// 去空白、去空行；同名允许重复（点名场景可能真有两个同名的人）
 	const cleaned = names
-		.map((n) => String(n).trim())
-		.filter((n) => n.length > 0);
+		.map((n) => (typeof n === 'string' ? { name: n, rarity: null } : n))
+		.map((n) => ({ name: String(n.name ?? '').trim(), rarity: n.rarity ?? null }))
+		.filter((n) => n.name.length > 0);
 	if (!cleaned.length) return 0;
-	cleaned.forEach((name, i) => {
+	cleaned.forEach(({ name, rarity }, i) => {
 		list.items.push({
 			uid: `${listId}#${Date.now()}-${i}`,
 			name,
 			chineseChar: name,
 			iconKey: null,
-			rarity: null
+			// F5：星级可自定义；null 表示未指定，点名时按随机规则分配（复刻壳层）
+			rarity: Number.isInteger(rarity) && rarity >= 3 && rarity <= 5 ? rarity : null
 		});
 	});
 	// 名单内容变了，旧池进度作废
 	delete s.pool[listId];
 	commit();
 	return cleaned.length;
+};
+
+/**
+ * 修改单个条目的星级（F5）。
+ * @param {number|null} rarity 3/4/5 或 null（null = 不指定，点名时随机）
+ */
+export const setMemberRarity = (listId, uid, rarity) => {
+	const s = getState();
+	const list = s.customLists.find((l) => l.id === listId);
+	if (!list) return false;
+	const item = list.items.find((it) => it.uid === uid);
+	if (!item) return false;
+	item.rarity = rarity === null ? null : Number(rarity);
+	commit();
+	return true;
 };
 
 /** 删除单个条目 */
@@ -305,10 +318,7 @@ export const getEnabledPool = () => {
 	const s = getState();
 	const merged = [];
 	s.selected.forEach((listId) => {
-		const listLabel =
-			builtinListById(listId)?.label ||
-			s.customLists.find((l) => l.id === listId)?.label ||
-			listId;
+		const listLabel = s.customLists.find((l) => l.id === listId)?.label || listId;
 		getListItems(listId).forEach((item) => {
 			merged.push({ ...item, fromList: listId, fromLabel: listLabel });
 		});

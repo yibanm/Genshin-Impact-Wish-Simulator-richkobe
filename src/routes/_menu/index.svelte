@@ -9,7 +9,7 @@
 
 	// Components
 	import Options from './Settings.svelte';
-	import Updates from './Updates.svelte';
+	import About from './About.svelte';
 	import Sidebar from './_sidebar.svelte';
 	import CustomBanner from './CustomBanner.svelte';
 	import BackupRestore from './BackupRestore.svelte';
@@ -61,8 +61,8 @@
 		<div class="content">
 			{#if activeContent === 'options'}
 				<Options />
-			{:else if activeContent === 'updates'}
-				<Updates />
+			{:else if activeContent === 'about'}
+				<About />
 			{:else if activeContent === 'customBanner'}
 				<CustomBanner />
 			{:else if activeContent === 'backupRestore'}

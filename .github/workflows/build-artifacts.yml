@@ -31,6 +31,24 @@ jobs:
           node-version: 20
           cache: npm
 
+      # Tauri 需要 Rust 工具链编译原生壳（WebView2 由系统提供，不打包进产物）
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # Cargo 缓存：Rust 首次编译需数分钟，缓存 target 与 registry 大幅缩短后续构建。
+      # 用 MIT 的 actions/cache 而非 Swatinem/rust-cache（后者 LGPL-3.0，传染性许可证，
+      # 按项目规则不引入 CI 流程）
+      - name: Cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tauri-
+
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
@@ -62,44 +80,54 @@ jobs:
           [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\dist", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
           Write-Host "已生成 $out"
 
-      # Electron 桌面版：安装版 exe + 便携目录
-      # --publish never 必需：electron-builder 检测到 CI 环境会隐式触发 publish，
-      # 无发布凭据时直接 exit 1（run 41365965421 的失败原因）
-      - name: Build Electron app
-        run: npx electron-builder --config electron-builder.yml --win --publish never
+      # Tauri 桌面版（替代 Electron）：壳只有 ~8MB，WebView2 由系统提供。
+      # 前端资源被内嵌进 exe，所以「便携版」就是单个 exe 压成 zip，
+      # 不像 Electron 需要打包整个 win-unpacked 目录（那是 287MB 便携版的主因）。
+      # beforeBuildCommand 已在 tauri.conf.json 里配置为 npm run build，
+      # 但上面的 Build web bundle 步骤已经产出 dist，Tauri 会直接用（不重复构建）。
+      - name: Build Tauri app
+        run: npx tauri build --bundles nsis
         env:
-          # CI 无 GUI 凭据弹窗，electron-builder 不需要签名证书即可产出未签名包
+          # tauri 的 beforeBuildCommand 会再跑一次 vite build 覆盖 dist，
+          # 这里必须重复注入品牌文案环境变量，否则第二次构建的 dist 会丢标题/描述
+          VITE_HOST: ''
+          VITE_APP_TITLE: 原神抽卡点名器
+          VITE_DESCRIPTION: 基于开源项目 Genshin Impact Wish Simulator 的中文修改版：新增多名单点名功能，移除广告与赞赏，全中文界面，可完全离线使用
+          VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
+          # Tauri 不需要代码签名证书即可产出未签名包；显式关掉避免它去找证书
+          TAURI_SIGNING_PRIVATE_KEY: ''
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
-      # 便携版：把 win-unpacked 目录压成 zip，按 0.10 规范命名
-      # 同 web zip：用 .NET ZipFile 保证正斜杠分隔符，跨平台可解
-      - name: Package portable zip
-        shell: pwsh
-        run: |
-          $v = "${{ steps.ver.outputs.version }}"
-          $src = "release\win-unpacked"
-          $out = "genshin-wish-roll-richkobe-$v-windows-x64-portable.zip"
-          if (-not (Test-Path $src)) { throw "未找到 $src，electron-builder 可能未产出便携目录" }
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\$src", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
-          Write-Host "已生成 $out"
-
-      # 安装版 exe 重命名对齐 0.10 规范（electron-builder 的 artifactName 已含 setup，
-      # 这里做一次兜底改名，确保文件名与规范逐字一致）
+      # NSIS 产物名含中文 productName，用 glob 定位而非硬编码，
+      # 再统一改名对齐 0.10 规范
       - name: Normalize setup exe name
         shell: pwsh
         run: |
           $v = "${{ steps.ver.outputs.version }}"
           $target = "genshin-wish-roll-richkobe-$v-windows-x64-setup.exe"
-          $found = Get-ChildItem -Path release -Filter "*setup*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($found -and $found.Name -ne $target) {
-            Move-Item -Path $found.FullName -Destination "release\$target"
-            Write-Host "已重命名 $($found.Name) -> $target"
-          } elseif ($found) {
-            Write-Host "名称已符合规范: $target"
-          } else {
-            throw "release 目录下未找到安装版 exe"
-          }
+          $found = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*setup*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $found) { throw "未在 src-tauri\target\release\bundle\nsis 找到 setup exe" }
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item -Path $found.FullName -Destination "release\$target" -Force
+          Write-Host "安装版: $($found.Name) -> $target"
+
+      # 便携版：Tauri 的 exe 自带前端资源，单文件即可运行，直接压 zip
+      - name: Package portable zip
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $out = "genshin-wish-roll-richkobe-$v-windows-x64-portable.zip"
+          # Cargo package name = genshin-wish-roll（见 src-tauri/Cargo.toml 的 name）
+          $exe = "src-tauri\target\release\genshin-wish-roll.exe"
+          if (-not (Test-Path $exe)) { throw "未找到 $exe，Tauri 可能未产出主程序" }
+          $stage = "portable\原神抽卡点名器.exe"
+          New-Item -ItemType Directory -Force -Path (Split-Path $stage) | Out-Null
+          Copy-Item -Path $exe -Destination $stage -Force
+          $size = (Get-Item $exe).Length / 1MB
+          Write-Host ("便携版 exe 体积: {0:N1} MB" -f $size)
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\portable", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
+          Write-Host "已生成 $out"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

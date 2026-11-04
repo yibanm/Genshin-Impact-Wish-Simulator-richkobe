@@ -20,6 +20,12 @@
 	let status = '';
 	let pageActive = 'index';
 	let showWelcomeModal = true;
+	// E2：勾过「不再提示」后启动不弹欢迎窗。读取失败（隐私模式等）按默认弹出。
+	try {
+		if (localStorage.getItem('giws-hide-welcome') === '1') showWelcomeModal = false;
+	} catch (e) {
+		/* 读不到就当没勾过 */
+	}
 
 	let appReady = writable(false);
 	let onWish = writable(false);
@@ -164,6 +170,7 @@
 		muted
 		loop
 		autoplay
+		playsinline
 		type="video/webm"
 		src={$assets['bg.webm']}
 		poster={$assets['wish-background.webp']}

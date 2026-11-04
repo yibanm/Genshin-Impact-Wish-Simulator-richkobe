@@ -27,6 +27,12 @@
 
 <section>
 	<header>
+		<!-- E1：教程页提供返回按钮（原页面只有底部一个「立即开始祈愿」链接，
+		     用户进了教程找不到回主界面的路）。用文字而非图标字体——
+		     图标字体无标准「返回」字形，乱猜字形会显示成方块 -->
+		<button class="back" on:click={() => window.location.replace('/')}>
+			{$t('backToApp')}
+		</button>
 		<div class="brand">
 			<a href="/" on:click|preventDefault={() => window.location.replace('/')}>
 				{APP_TITLE}
@@ -75,6 +81,22 @@
 		z-index: +10;
 		color: #fff;
 		font-size: 1rem;
+	}
+
+	.back {
+		border: 1px solid rgba(255, 255, 255, 0.4);
+		border-radius: 2rem;
+		background-color: transparent;
+		color: #fff;
+		font-family: inherit;
+		font-size: 0.85rem;
+		padding: 0.25rem 0.8rem;
+		cursor: pointer;
+	}
+
+	.back:hover {
+		border-color: #e3a023;
+		color: #e3a023;
 	}
 
 	footer {
@@ -163,12 +185,12 @@
 
 	section :global(ul),
 	section :global(ol) {
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 		padding-left: 1.5rem;
 	}
 	section :global(p) {
 		padding: 0.4rem 0;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		font-family: inherit;
 	}
 
 	section :global(img),
