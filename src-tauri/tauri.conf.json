@@ -46,7 +46,10 @@
       "nsis": {
         "languages": ["SimpChinese"],
         "installMode": "currentUser",
-        "displayLanguageSelector": false
+        "displayLanguageSelector": false,
+        "sidebarImage": "../installer/wizard.bmp",
+        "headerImage": "../installer/wizard-small.bmp",
+        "startMenuFolder": "GenshinWishRoll"
       }
     }
   }
