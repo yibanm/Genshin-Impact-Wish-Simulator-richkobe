@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "原神祈愿模拟器",
+  "productName": "GenshinWishRoll",
   "version": "1.0.1",
   "identifier": "com.richkobe.genshinwishroll",
   "build": {

@@ -75,7 +75,7 @@ const manifest = {
 	name: VITE_APP_TITLE,
 	description: VITE_DESCRIPTION,
 	id: 'genshin-wish-roll',
-	short_name: '抽卡点名器',
+	short_name: VITE_APP_TITLE,
 	theme_color: '#ffffff',
 	background_color: '#ffffff',
 	display: 'fullscreen',
