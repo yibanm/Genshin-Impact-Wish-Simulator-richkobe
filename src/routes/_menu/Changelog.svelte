@@ -2,17 +2,18 @@
 	import { t } from 'svelte-i18n';
 	import { data as updates } from '$lib/data/updates.json';
 
-	// 更新日志独立页（用户 2026-11-05 要求）：展示每期详细公告，
-	// 页面底部为作者赞赏码（微信）。
+	// 更新日志独立页（用户 2026-11-05 要求）：按版本 + 更新日期排列，整页可滚动；
+	// 页面不再放赞赏码（用户改要求放关于页）。
 </script>
 
 <div class="changelog-page">
 	<h2>{$t('menu.changelog')}</h2>
 
-	{#each updates as entry (entry.date)}
+	{#each updates as entry (entry.date + entry.ver)}
 		<div class="entry" class:featured={entry.featured}>
-			<div class="date">
-				{entry.date}
+			<div class="head">
+				<strong class="ver">v{entry.ver}</strong>
+				<span class="date">{entry.date}</span>
 				{#if entry.featured}<span class="badge">{$t('changelog.featured')}</span>{/if}
 			</div>
 			<ul>
@@ -22,12 +23,6 @@
 			</ul>
 		</div>
 	{/each}
-
-	<div class="tip">
-		<h3>{$t('changelog.tipTitle')}</h3>
-		<img src="/tip-qrcode.png" alt="{$t('changelog.tipTitle')}" />
-		<p>{$t('changelog.tipHint')}</p>
-	</div>
 </div>
 
 <style>
@@ -35,6 +30,7 @@
 		padding: 0.5rem 1rem 1.5rem;
 		overflow-y: auto;
 		height: 100%;
+		-webkit-overflow-scrolling: touch;
 	}
 
 	h2 {
@@ -53,21 +49,29 @@
 		border-radius: 0 0.4rem 0.4rem 0;
 	}
 
-	.date {
-		font-weight: 600;
-		color: #b06205;
+	.head {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
 		margin-bottom: 0.3rem;
 	}
 
+	.ver {
+		color: #b06205;
+		font-size: 1rem;
+	}
+
+	.date {
+		color: rgba(0, 0, 0, 0.5);
+		font-size: 0.85rem;
+	}
+
 	.badge {
-		display: inline-block;
-		margin-left: 0.5rem;
 		padding: 0 0.5rem;
 		border-radius: 1rem;
 		background-color: #e3a023;
 		color: #fff;
 		font-size: 0.75rem;
-		font-weight: 400;
 	}
 
 	.entry ul {
@@ -77,32 +81,5 @@
 		font-size: 0.88rem;
 		line-height: 1.7;
 		color: rgba(0, 0, 0, 0.78);
-	}
-
-	.tip {
-		margin-top: 2rem;
-		padding-top: 1.2rem;
-		border-top: 1px dashed rgba(0, 0, 0, 0.25);
-		text-align: center;
-	}
-
-	.tip h3 {
-		margin: 0 0 0.8rem;
-		font-size: 1rem;
-	}
-
-	.tip img {
-		width: 220px;
-		max-width: 70%;
-		border-radius: 0.5rem;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-	}
-
-	.tip p {
-		margin: 0.8rem auto 0;
-		max-width: 26rem;
-		font-size: 0.9rem;
-		line-height: 1.7;
-		color: rgba(0, 0, 0, 0.7);
 	}
 </style>

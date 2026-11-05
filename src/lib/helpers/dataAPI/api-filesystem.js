@@ -150,6 +150,26 @@ export const renewSavedFile = async () => {
 	}
 };
 
+/**
+ * 删除自动导出绑定的本地备份文件（2026-11-05 用户要求：删除名单时可选勾选）。
+ * File System Access API 的 remove() 只删 handle 指向的那一个文件，不递归、不碰目录。
+ * 无绑定文件、文件已不存在、或浏览器不支持 remove 时静默返回 false（不算故障）。
+ */
+export const deleteSavedBackupFile = async () => {
+	try {
+		const { fileHandle } = (await AssetManager.get('savedFile')) || {};
+		if (!fileHandle) return false;
+		if (typeof fileHandle.remove === 'function') await fileHandle.remove();
+		await clearLocalFile();
+		return true;
+	} catch (e) {
+		// 用户已手动删过文件、或权限失效：清掉内部绑定即可，不报错打扰
+		console.error('删除本地备份文件失败（已解除绑定）：', e);
+		await clearLocalFile();
+		return false;
+	}
+};
+
 // Read Import File
 const getFileData = async (handle) => {
 	const { fileHandle: currentHandle } = await AssetManager.get('savedFile');

@@ -54,6 +54,107 @@
 	// F6：批量添加弹窗状态（复用 bulkText）
 	let bulkModal = false;
 
+	// 多选模式（2026-11-05 用户要求）：勾选后可批量删除/设星级/设图标。
+	// selected 用普通对象（uid→true）保证响应式，与 iconUrls 同款约定。
+	let selectMode = false;
+	let selected = {};
+	// 单条删除确认弹窗（用户要求：单一删除弹确认）
+	let memberToDelete = null;
+	// 批量设图标的隐藏 file input
+	let bulkIconInput;
+
+	$: selectedCount = Object.keys(selected).filter((k) => selected[k]).length;
+
+	const toggleSelectMode = () => {
+		playSfx();
+		selectMode = !selectMode;
+		selected = {};
+	};
+	const toggleSelect = (uid) => {
+		selected = { ...selected, [uid]: !selected[uid] };
+	};
+	const toggleSelectAll = () => {
+		const all = items.every((it) => selected[it.uid]);
+		const next = {};
+		if (!all) items.forEach((it) => (next[it.uid] = true));
+		selected = next;
+	};
+
+	const selectedUids = () => Object.keys(selected).filter((k) => selected[k]);
+
+	const handleBulkDelete = async () => {
+		const uids = selectedUids();
+		if (!uids.length) return;
+		playSfx();
+		for (const uid of uids) {
+			const item = items.find((it) => it.uid === uid);
+			await removeMember(listId, uid);
+			if (item?.iconKey) dropIconCache(item.iconKey);
+		}
+		selected = {};
+		await loadItems();
+		pushToast({ message: $t('rollcall.bulkDeleted', { values: { count: uids.length } }), type: 'success' });
+	};
+
+	const handleBulkRarity = async (rarity) => {
+		const uids = selectedUids();
+		if (!uids.length) return;
+		playSfx('click2');
+		uids.forEach((uid) => setMemberRarity(listId, uid, rarity));
+		await loadItems();
+	};
+
+	// 批量设图标：选一张图应用到所有勾选条目（与单条换图同上限同存储）
+	const handleBulkIconPick = async (event) => {
+		const file = event.target.files?.[0];
+		event.target.value = '';
+		if (!file) return;
+		if (!file.type.startsWith('image/')) {
+			return pushToast({ message: $t('rollcall.notAnImage'), type: 'error' });
+		}
+		if (file.size > ICON_MAX_BYTES) {
+			return pushToast({
+				message: $t('rollcall.iconTooLarge', { values: { maxSize: '2MB' } }),
+				type: 'error'
+			});
+		}
+		const uids = selectedUids();
+		if (!uids.length) return;
+		playSfx();
+		let okCount = 0;
+		for (const uid of uids) {
+			try {
+				await setMemberIcon(listId, uid, file);
+				okCount++;
+			} catch (e) {
+				console.error('批量设图标失败：', uid, e);
+			}
+		}
+		// 旧缓存全部作废，重新从 IDB 读
+		uids.forEach((uid) => dropIconCache(items.find((it) => it.uid === uid)?.iconKey || ''));
+		iconUrls = {};
+		await loadItems();
+		pushToast({
+			message: $t('rollcall.bulkIconDone', { values: { count: okCount } }),
+			type: okCount === uids.length ? 'success' : 'error'
+		});
+	};
+
+	// 单条删除：先弹确认（用户 2026-11-05 要求），确认后才真删
+	const askRemoveMember = (item) => {
+		playSfx();
+		memberToDelete = item;
+	};
+	const confirmRemoveMember = async () => {
+		if (!memberToDelete) return;
+		const item = memberToDelete;
+		memberToDelete = null;
+		const ok = await removeMember(listId, item.uid);
+		if (!ok) return pushToast({ message: $t('rollcall.deleteFailed'), type: 'error' });
+		if (item.iconKey) dropIconCache(item.iconKey);
+		await loadItems();
+	};
+
 	// 图标 blob → objectURL 的缓存，避免每次渲染都重新读取 IndexedDB。
 	// 必须是**普通对象**而非 Map：Svelte 的响应式只追踪普通变量的重新赋值，
 	// Map.set() 不触发重渲染——曾导致「设置图标后缩略图不刷新」（用户报的 bug）。
@@ -126,7 +227,7 @@
 		addModal = { name: '', rarity: null, iconBlob: null, iconPreview: '' };
 	};
 	const cancelAddModal = () => (addModal = null);
-	const confirmAddModal = () => {
+	const confirmAddModal = async () => {
 		const name = (addModal?.name || '').trim();
 		if (!name) {
 			pushToast({ message: $t('rollcall.emptyInput'), type: 'error' });
@@ -134,21 +235,25 @@
 		}
 		const added = addMembers(listId, [{ name, rarity: addModal.rarity }]);
 		if (!added) return;
-		// 单条添加带图标：先取刚加入的条目 uid 再挂图标
+		// 单条添加带图标：先取刚加入的条目 uid 再挂图标。
+		// 必须 await：setMemberIcon 把 iconKey 写进名单是异步的，不 await 就 loadItems
+		// 会读到还没有 iconKey 的旧数据，图标缓存永远建不起来（缩略图不显示的根因）
 		if (addModal.iconBlob) {
 			const fresh = getListItems(listId);
 			const last = fresh[fresh.length - 1];
 			if (last) {
-				setMemberIcon(listId, last.uid, addModal.iconBlob).catch((e) => {
+				try {
+					await setMemberIcon(listId, last.uid, addModal.iconBlob);
+				} catch (e) {
 					pushToast({ message: $t('rollcall.iconFailed'), type: 'error' });
 					console.error(e);
-				});
+				}
 			}
 		}
 		playSfx('click2');
 		addModal = null;
 		pushToast({ message: $t('rollcall.added', { values: { count: added } }), type: 'success' });
-		loadItems();
+		await loadItems();
 	};
 	const pickAddIcon = (event) => {
 		const file = event.target.files?.[0];
@@ -255,14 +360,6 @@
 		txtFileInput?.click();
 	};
 
-	const handleRemove = async (item) => {
-		playSfx();
-		const ok = await removeMember(listId, item.uid);
-		if (!ok) return pushToast({ message: $t('rollcall.deleteFailed'), type: 'error' });
-		if (item.iconKey) dropIconCache(item.iconKey);
-		loadItems();
-	};
-
 	const startRename = (item) => {
 		playSfx();
 		renamingUid = item.uid;
@@ -335,6 +432,54 @@
 		</button>
 	</div>
 	<p class="tip">{$t('rollcall.txtTip')}</p>
+
+	<!-- 多选模式工具栏（2026-11-05）：批量删除/设星级/设图标 -->
+	<div class="select-bar">
+		<ButtonModal on:click={toggleSelectMode}>
+			{selectMode ? $t('rollcall.exitSelect') : $t('rollcall.enterSelect')}
+		</ButtonModal>
+		{#if selectMode}
+			<button type="button" class="sel-op" on:click={toggleSelectAll}>
+				{items.length && items.every((it) => selected[it.uid])
+					? $t('rollcall.unselectAll')
+					: $t('rollcall.selectAll')}
+			</button>
+			<span class="sel-count">{$t('rollcall.selectedCount', { values: { count: selectedCount } })}</span>
+			<button type="button" class="sel-op danger" disabled={!selectedCount} on:click={handleBulkDelete}>
+				{$t('rollcall.bulkDelete')}
+			</button>
+			<span class="sel-rarity">
+				{#each [3, 4, 5] as r}
+					<button type="button" class="sel-op" disabled={!selectedCount} on:click={() => handleBulkRarity(r)}>
+						{$t('rollcall.setRarityTo', { values: { r } })}
+					</button>
+				{/each}
+			</span>
+			<button type="button" class="sel-op" disabled={!selectedCount} on:click={() => bulkIconInput?.click()}>
+				{$t('rollcall.bulkSetIcon')}
+			</button>
+			<input
+				type="file"
+				accept="image/*"
+				hidden
+				bind:this={bulkIconInput}
+				on:change={handleBulkIconPick}
+			/>
+		{/if}
+	</div>
+
+	<!-- 单条删除确认弹窗 -->
+	{#if memberToDelete}
+		<ModalTpl
+			title={$t('rollcall.delete')}
+			on:confirm={confirmRemoveMember}
+			on:cancel={() => (memberToDelete = null)}
+		>
+			<div class="confirm-text">
+				{$t('rollcall.deleteMemberPrompt', { values: { name: displayName(memberToDelete) } })}
+			</div>
+		</ModalTpl>
+	{/if}
 
 	<!-- Web 通道用的隐藏文件选择器；Electron 壳走主进程对话框，不需要它。
 	     独立放置而非嵌在 label 内，避免 label 点击同时触发原生选择与 on:click 造成弹两次框 -->
@@ -415,7 +560,13 @@
 	{:else}
 		<ul class="members" in:fade={{ duration: 150 }}>
 			{#each items as item (item.uid)}
-				<li class="member">
+				<li class="member" class:selecting={selectMode}>
+					{#if selectMode}
+						<label class="pick">
+							<input type="checkbox" checked={!!selected[item.uid]} on:change={() => toggleSelect(item.uid)} />
+							<span class="box"><i class="gi-check" /></span>
+						</label>
+					{/if}
 					<span class="thumb">
 						{#if iconOf(item)}
 							<img src={iconOf(item)} alt={item.name} loading="lazy" />
@@ -478,7 +629,7 @@
 						<button class="icon-btn" title={$t('rollcall.rename')} on:click={() => startRename(item)}>
 							<i class="gi-pen" />
 						</button>
-						<button class="icon-btn danger" title={$t('rollcall.delete')} on:click={() => handleRemove(item)}>
+						<button class="icon-btn danger" title={$t('rollcall.delete')} on:click={() => askRemoveMember(item)}>
 							<i class="gi-delete" />
 						</button>
 					</span>
@@ -705,6 +856,83 @@
 		color: rgba(0, 0, 0, 0.4);
 		padding: 1.5rem 0;
 		font-size: 0.85rem;
+	}
+
+	/* 多选工具栏 */
+	.select-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin: 0.4rem 0;
+	}
+
+	.sel-op {
+		padding: 0.2rem 0.7rem;
+		border: 1px solid rgba(0, 0, 0, 0.2);
+		border-radius: 1rem;
+		background-color: #fff;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+
+	.sel-op:disabled {
+		opacity: 0.45;
+		cursor: default;
+	}
+
+	.sel-op.danger {
+		border-color: #c0392b;
+		color: #c0392b;
+	}
+
+	.sel-count {
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.55);
+	}
+
+	.sel-rarity {
+		display: inline-flex;
+		gap: 0.3rem;
+	}
+
+	/* 列表勾选框 */
+	.pick {
+		display: inline-flex;
+		align-items: center;
+		flex-shrink: 0;
+		cursor: pointer;
+	}
+
+	.pick input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.pick .box {
+		width: 1.15rem;
+		height: 1.15rem;
+		border: 1.5px solid rgba(0, 0, 0, 0.35);
+		border-radius: 0.25rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		color: transparent;
+		font-size: 0.8rem;
+		background-color: #fff;
+	}
+
+	.pick input:checked + .box {
+		background-color: #e3a023;
+		border-color: #e3a023;
+		color: #fff;
+	}
+
+	.confirm-text {
+		font-size: 0.92rem;
+		line-height: 1.6;
+		padding: 0.3rem 0.2rem;
 	}
 
 	.members {

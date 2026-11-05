@@ -1,6 +1,8 @@
 <script>
 	import { setContext } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { t } from 'svelte-i18n';
+	import { pushToast } from '$lib/helpers/toast';
 	import { activeVersion, assets, bannerList, editID } from '$lib/store/app-stores';
 	import { BannerManager } from '$lib/helpers/dataAPI/api-indexeddb';
 
@@ -104,37 +106,83 @@
 	const setWatermark = (text) => (watermark = text);
 	setContext('setWatermark', setWatermark);
 
+	// 上传图先降采样再进编辑器（2026-11-05 用户报「调整时特别卡」）：
+	// 手机/相机原图常 4000px+，直接喂给 zoomist 每帧拖拽都要解码合成巨图，卡到不可用；
+	// 限最长边 2048 并重编码 webp，显示无感知差异，拖拽与 IDB 存储都轻一个量级。
+	const MAX_SIDE = 2048;
+	const downscaleToDataURL = (file) =>
+		new Promise((resolve, reject) => {
+			const url = URL.createObjectURL(file);
+			const img = new Image();
+			img.onload = () => {
+				try {
+					const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+					// 小图不重编码，直接读原文件 dataURL，避免无谓的画质损失
+					if (scale === 1 && file.type === 'image/webp') {
+						const r = new FileReader();
+						r.onload = () => {
+							URL.revokeObjectURL(url);
+							resolve(r.result);
+						};
+						r.onerror = () => {
+							URL.revokeObjectURL(url);
+							reject(r.error);
+						};
+						r.readAsDataURL(file);
+						return;
+					}
+					const canvas = document.createElement('canvas');
+					canvas.width = Math.round(img.width * scale);
+					canvas.height = Math.round(img.height * scale);
+					canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+					URL.revokeObjectURL(url);
+					resolve(canvas.toDataURL('image/webp', 0.9));
+				} catch (e) {
+					URL.revokeObjectURL(url);
+					reject(e);
+				}
+			};
+			img.onerror = () => {
+				URL.revokeObjectURL(url);
+				reject(new Error('图片解码失败'));
+			};
+			img.src = url;
+		});
+
 	const changeArt = (file) => {
 		if (!file) return;
-		const reader = new FileReader();
-		reader.readAsDataURL(file);
-		reader.addEventListener('load', () => {
-			images.artURL = reader.result;
-			imgChanged.artURL = true;
-			onBannerEdit = true;
-		});
+		downscaleToDataURL(file)
+			.then((dataURL) => {
+				images.artURL = dataURL;
+				imgChanged.artURL = true;
+				onBannerEdit = true;
+			})
+			.catch((e) => {
+				console.error('立绘处理失败：', e);
+				pushToast({ message: $t('rollcall.notAnImage'), type: 'error' });
+			});
 	};
 	setContext('changeArt', changeArt);
 
 	const changeFace = (file) => {
 		if (!file) return;
-		const reader = new FileReader();
-		reader.readAsDataURL(file);
-		reader.addEventListener('load', () => {
-			images.faceURL = reader.result;
-			imgChanged.faceURL = true;
-		});
+		downscaleToDataURL(file)
+			.then((dataURL) => {
+				images.faceURL = dataURL;
+				imgChanged.faceURL = true;
+			})
+			.catch((e) => console.error('头像处理失败：', e));
 	};
 	setContext('changeFace', changeFace);
 
 	const changeThumbnail = (file) => {
 		if (!file) return;
-		const reader = new FileReader();
-		reader.readAsDataURL(file);
-		reader.addEventListener('load', () => {
-			images.thumbnail = reader.result;
-			imgChanged.thumbnail = true;
-		});
+		downscaleToDataURL(file)
+			.then((dataURL) => {
+				images.thumbnail = dataURL;
+				imgChanged.thumbnail = true;
+			})
+			.catch((e) => console.error('缩略图处理失败：', e));
 	};
 	setContext('changeThumbnail', changeThumbnail);
 </script>

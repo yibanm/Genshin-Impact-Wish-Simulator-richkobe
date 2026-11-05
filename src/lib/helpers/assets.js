@@ -175,6 +175,8 @@ export const base64ToBlob = (image) => {
 };
 
 export const initCDNURL = async () => {
+	// 本项目未配置作者后端（API_HOST 为空）：不加载图床脚本，避免拼出相对路径 404
+	if (!API_HOST) return;
 	const check = document.head.querySelector('.imagecdn');
 	if (check) return;
 

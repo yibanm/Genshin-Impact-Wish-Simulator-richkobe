@@ -280,7 +280,8 @@
 			"new": "New",
 			"convertion": "Convert",
 			"title": "Wish Result for {item} et al"
-		}
+		},
+		"notReady": "Banner data is still loading, please try again in a moment"
 	},
 	"outfit": {
 		"heading": "Character Outfits",
@@ -644,14 +645,28 @@
 		"rarityLabel": "Rarity",
 		"rarityRandom": "Random",
 		"iconLabel": "Image",
-		"importedList": "Imported list"
+		"importedList": "Imported list",
+		"enterSelect": "Select",
+		"exitSelect": "Exit select",
+		"selectAll": "Select all",
+		"unselectAll": "Clear",
+		"selectedCount": "{count} selected",
+		"bulkDelete": "Delete selected",
+		"setRarityTo": "Set {r} star",
+		"bulkSetIcon": "Set icon for selected",
+		"deleteMemberPrompt": "Remove \"{name}\" from this list?",
+		"bulkDeleted": "{count} removed",
+		"bulkIconDone": "Icon set for {count} members",
+		"deleteLocalFileToo": "Also delete the local auto-backup file",
+		"localFileDeleted": "Local backup file deleted",
+		"localFileNone": "No local backup file is bound"
 	},
 	"about": {
 		"version": "Version",
 		"intro": "Developed and maintained by richkobe: multi-list roll call, works completely offline. Game assets belong to miHoYo / HoYoverse.",
 		"repo": "GitHub repository",
 		"issues": "Report an issue",
-		"starHint": "If this mod is useful to you, a star on the repository is the most practical support for free maintenance.",
+		"starHint": "If this project is useful to you, a star on the repository is appreciated.",
 		"star": "Give a star",
 		"changelog": "Changelog (brief)",
 		"license": "Source code under MIT; game assets and names belong to miHoYo / HoYoverse. Not for commercial use."

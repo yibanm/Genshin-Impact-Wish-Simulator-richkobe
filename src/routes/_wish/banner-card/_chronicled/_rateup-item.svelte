@@ -56,7 +56,8 @@
 			{#if type === 'weapon'}
 				<img class={weaponType} src={$assets[name]} alt={$t(name)} />
 			{:else}
-				<img src={$assets[`wishcard/${name}`]} alt={$t(`${name}.name`)} />
+				<!-- 上游 wishcard 卡面图只有 32 张五星（资产不全），缺的回落全身立绘，避免破图 -->
+				<img src={$assets[`wishcard/${name}`] || $assets[`splash-art/${name}`]} alt={$t(`${name}.name`)} />
 			{/if}
 		</picture>
 	</div>

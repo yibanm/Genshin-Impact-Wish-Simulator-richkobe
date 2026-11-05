@@ -24,6 +24,7 @@
 	import RollcallEditor from './_rollcall-editor.svelte';
 	import { readNamesFile, pickNamesViaBridge, hasNativePicker } from '$lib/helpers/rollcall/import-txt';
 	import { addMembers } from '$lib/helpers/dataAPI/api-rollcall';
+	import { deleteSavedBackupFile } from '$lib/helpers/dataAPI/api-filesystem';
 
 	/**
 	 * 名单管理页（本项目新增）
@@ -64,18 +65,35 @@
 
 	// 删除名单的二次确认
 	let listToDelete = null;
+	// 删除名单时是否同时删除绑定的本地备份文件（默认不删，用户勾选才删）
+	let deleteLocalFile = false;
 	const askDelete = (list) => {
 		playSfx();
 		listToDelete = list;
+		deleteLocalFile = false;
 	};
+	const handleDeleteFileToggle = ({ detail }) => (deleteLocalFile = !!detail.checked);
 	const confirmDelete = async () => {
 		if (!listToDelete) return;
 		const ok = await deleteList(listToDelete.id);
 		if (ok) pushToast({ message: $t('rollcall.listDeleted'), type: '' });
 		else pushToast({ message: $t('rollcall.deleteFailed'), type: 'error' });
+		// 勾选了「同时删除本地文件」：名单删除成功后才动备份文件，
+		// 名单没删掉就不删文件，避免用户丢备份
+		if (ok && deleteLocalFile) {
+			const removed = await deleteSavedBackupFile();
+			pushToast({
+				message: removed ? $t('rollcall.localFileDeleted') : $t('rollcall.localFileNone'),
+				type: ''
+			});
+		}
 		listToDelete = null;
+		deleteLocalFile = false;
 	};
-	const cancelDelete = () => (listToDelete = null);
+	const cancelDelete = () => {
+		listToDelete = null;
+		deleteLocalFile = false;
+	};
 
 	const openEditor = (listId) => {
 		playSfx();
@@ -191,6 +209,12 @@
 	>
 		<div class="confirm-text">
 			{$t('rollcall.deleteListPrompt', { values: { name: listToDelete.label } })}
+		</div>
+		<!-- 2026-11-05：删除名单时可选同时删除绑定的本地备份文件（默认不删） -->
+		<div class="confirm-extra">
+			<CheckBox id="del-local-file" checked={deleteLocalFile} on:change={handleDeleteFileToggle}>
+				{$t('rollcall.deleteLocalFileToo')}
+			</CheckBox>
 		</div>
 	</ModalTpl>
 {/if}

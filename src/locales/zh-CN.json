@@ -282,7 +282,8 @@
 			"convertion": "转化",
 			"title": "{item} 祈愿结果"
 		},
-		"wishTitle": "祈愿"
+		"wishTitle": "祈愿",
+		"notReady": "卡池数据还在加载，请稍等片刻再试"
 	},
 	"outfit": {
 		"heading": "角色装扮",
@@ -697,14 +698,28 @@
 		"rarityLabel": "星级",
 		"rarityRandom": "随机",
 		"iconLabel": "图像",
-		"importedList": "导入的名单"
+		"importedList": "导入的名单",
+		"enterSelect": "多选",
+		"exitSelect": "退出多选",
+		"selectAll": "全选",
+		"unselectAll": "取消全选",
+		"selectedCount": "已选 {count} 项",
+		"bulkDelete": "删除所选",
+		"setRarityTo": "设 {r} 星",
+		"bulkSetIcon": "批量设图标",
+		"deleteMemberPrompt": "确定从名单中删除「{name}」吗？",
+		"bulkDeleted": "已删除 {count} 项",
+		"bulkIconDone": "已为 {count} 个成员设置图标",
+		"deleteLocalFileToo": "同时删除本机上的自动备份文件",
+		"localFileDeleted": "本地备份文件已删除",
+		"localFileNone": "没有绑定中的本地备份文件"
 	},
 	"about": {
 		"version": "版本",
 		"intro": "由 richkobe 开发与维护：支持多名单点名，可完全离线使用。游戏素材版权归 miHoYo / HoYoverse 所有。",
 		"repo": "GitHub 仓库",
 		"issues": "问题反馈（Issues）",
-		"starHint": "如果这个项目对你有用，欢迎到仓库点个 star——这是对无偿维护最实在的支持。",
+		"starHint": "如果这个项目对你有用，欢迎到仓库点个 star。",
 		"star": "去点 star",
 		"changelog": "更新日志（简略）",
 		"license": "源码遵循 MIT 协议；游戏素材与名称版权归 miHoYo / HoYoverse 所有，本项目不用于任何商业用途。"

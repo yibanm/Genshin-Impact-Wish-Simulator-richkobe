@@ -41,6 +41,8 @@
 	let rollCount = 0;
 	let result = [];
 	let WishInstance;
+	// 引擎初始化的 Promise：首屏点击可能早于 init 完成，doRoll await 它而不是报错
+	let wishReady = null;
 
 	let type;
 	$: nowBanner = $bannerList[$activeBanner] || {};
@@ -53,7 +55,11 @@
 	// Load Wish Configuration When changing banner Version
 	const initialWish = async ({ patch, phase }) => {
 		if (!patch || !phase) return;
-		WishInstance = await WISH.init(patch, phase, $customData);
+		wishReady = WISH.init(patch, phase, $customData).then((inst) => {
+			WishInstance = inst;
+			return inst;
+		});
+		await wishReady;
 	};
 	onMount(() => activeVersion.subscribe(initialWish));
 
@@ -149,6 +155,14 @@
 		}
 
 		try {
+			// 引擎实例异步初始化：首屏点击可能早于 init 完成。await 初始化 Promise 而不是报错，
+			// 用户感知为「点下去稍等一下正常出结果」，而非「祈愿出错」（2026-11-05 用户报）
+			if (!WishInstance && wishReady) await wishReady;
+			if (!WishInstance) {
+				onWish.set(false);
+				pushToast({ message: get(t)('wish.notReady'), type: 'error' });
+				return;
+			}
 			for (let i = 0; i < count; i++) {
 				const result = await roll(bannerToRoll, WishInstance, indexOfCharBanner);
 				tmp.push(result);

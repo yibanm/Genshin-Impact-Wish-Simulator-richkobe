@@ -308,7 +308,8 @@ input.wishinput {
 	border-radius: 10rem;
 	outline: none;
 	padding: 2% 6%;
-	font-family: var(--gi-global-font);
+	/* 中文输入场景用含中文字形的栈：global 栈只有拉丁字形，中文会回退系统字体造成粗细不齐 */
+	font-family: var(--gi-zh-font);
 	color: #3b4255;
 	border: 0;
 	transition: 0.2s;
@@ -522,4 +523,12 @@ h1 {
 	h1 {
 		font-size: 1.5rem;
 	}
+}
+
+/* 游戏字体族无粗体字重，浏览器对 strong/b 做合成加粗（描边加宽）观感脏且粗细不均；
+   正文强调改用颜色区分，保留语义标签不动（md 的 **加粗** 与 <strong> 均命中） */
+strong,
+b {
+	font-weight: normal;
+	color: #b06205;
 }

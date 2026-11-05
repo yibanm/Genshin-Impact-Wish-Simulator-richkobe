@@ -33,6 +33,12 @@
 		{$t('about.star')}
 	</a>
 
+	<div class="tip">
+		<h3>{$t('changelog.tipTitle')}</h3>
+		<img src="/tip-qrcode.png" alt="{$t('changelog.tipTitle')}" />
+		<p>{$t('changelog.tipHint')}</p>
+	</div>
+
 	<p class="license">{$t('about.license')}</p>
 </div>
 
@@ -89,6 +95,33 @@
 		background-color: #fff6e2;
 		color: #8a5a00;
 		font-weight: 600;
+	}
+
+	.tip {
+		margin-top: 1.4rem;
+		padding-top: 1rem;
+		border-top: 1px dashed rgba(0, 0, 0, 0.25);
+		text-align: center;
+	}
+
+	.tip h3 {
+		margin: 0 0 0.7rem;
+		font-size: 1rem;
+	}
+
+	.tip img {
+		width: 200px;
+		max-width: 65%;
+		border-radius: 0.5rem;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+	}
+
+	.tip p {
+		margin: 0.7rem auto 0;
+		max-width: 24rem;
+		font-size: 0.88rem;
+		line-height: 1.7;
+		color: rgba(0, 0, 0, 0.7);
 	}
 
 	.license {
