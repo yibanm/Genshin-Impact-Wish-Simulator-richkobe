@@ -55,18 +55,19 @@ const customEntryFromData = (data) => {
 	};
 };
 
-/** 读取当前自定义卡池（无则返回 null）。自定义池在本地只存一条记录。 */
-const loadCustomEntry = async () => {
+/** 读取全部自定义卡池（无则返回空数组）。
+ * 2026-11-05 多槽修复：旧实现只取 lastModified 最新一条，用户创建第二个池后
+ * 页签栏永远只显示最新那个（「不管添加多少个卡池都不多一个选项」）。
+ * 现在返回全部未删除条目，按创建时间稳定排序。 */
+const loadCustomEntries = async () => {
 	try {
 		const all = await idb.getAll();
 		const alive = (all || []).filter((b) => b && !b.deleted);
-		if (!alive.length) return null;
-		// 多条时取最近修改的一条（本地单条语义，兼容历史多条目数据）
-		alive.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-		return customEntryFromData(alive[0]);
+		alive.sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+		return alive.map(customEntryFromData);
 	} catch (e) {
 		console.error(e);
-		return null;
+		return [];
 	}
 };
 
@@ -87,7 +88,10 @@ export const switchToCustom = async (bannerID) => {
 
 	let index = -1;
 	bannerList.update((list) => {
-		index = list.findIndex((b) => b.type === 'custom');
+		// 多槽：按 itemID 找同一个池的页签更新；找不到才追加新页签。
+		// 旧实现 findIndex(type==='custom') 会把任意自定义页签覆盖成当前编辑的池，
+		// 导致多个池永远只剩一个页签。
+		index = list.findIndex((b) => b.type === 'custom' && b.itemID === entry.itemID);
 		if (index >= 0) list[index] = entry;
 		else {
 			list.push(entry);
@@ -167,9 +171,11 @@ export const initializeBanner = async ({ patch, phase }) => {
 	try {
 		if (!patch || !phase) return;
 
-		// 自定义模式启动：先铺官方池（用默认版本），再把自定义页签追加并切过去
+		// 自定义模式启动：先铺官方池（用默认版本）+ 全部自定义页签，再切到目标池
 		if (patch.match(/(local|custom)/gi)) {
 			const { list, weapons } = await buildOfficialList(version, wishPhase);
+			const customEntries = await loadCustomEntries();
+			if (customEntries.length) list.push(...customEntries);
 			bannerList.set(list);
 			isFatepointSystem.set(!!weapons.fatepointsystem);
 			return switchToCustom(phase);
@@ -177,9 +183,9 @@ export const initializeBanner = async ({ patch, phase }) => {
 
 		const { list, weapons } = await buildOfficialList(patch, phase);
 
-		// C2：已有自定义卡池时，页签直接追加在官方池后面（不隐藏页签栏）
-		const customEntry = await loadCustomEntry();
-		if (customEntry) list.push(customEntry);
+		// C2 + 多槽：全部自定义卡池按创建顺序追加在官方池后面（不隐藏页签栏）
+		const customEntries = await loadCustomEntries();
+		if (customEntries.length) list.push(...customEntries);
 
 		bannerList.set(list);
 		isFatepointSystem.set(!!weapons.fatepointsystem);

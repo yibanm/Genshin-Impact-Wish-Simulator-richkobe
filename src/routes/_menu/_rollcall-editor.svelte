@@ -1028,6 +1028,19 @@
 	/* 移动端（含安卓横屏）：操作按钮常驻可见 + 换行到名字下方。
 	   原布局一行排「图标+名字+星级+5个操作按钮」，横屏窄高下按钮被挤出可视区，
 	   用户「编辑不到」。换行后名单列表仍可滚动，触控目标也更大。 */
+	/* 移动端（安卓窄屏）：编辑器改流式布局，整页滚动交给外层 .pane 的滚动条。
+	   桌面端保持「列表内部滚动」是因为高度链完整；移动端 pane 只有 45% 高，
+	   头部+按钮+提示+多选栏四个块就把 .members（flex:1）挤到 0 高，名单完全不可见。 */
+	:global(.mobile) .editor {
+		height: auto;
+		min-height: unset;
+	}
+
+	:global(.mobile) .members {
+		overflow: visible;
+		flex: none;
+	}
+
 	:global(.mobile) .member {
 		flex-wrap: wrap;
 		row-gap: 0.2rem;

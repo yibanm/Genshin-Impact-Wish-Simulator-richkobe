@@ -12,17 +12,19 @@
 	--sab: env(safe-area-inset-bottom, 0px);
 	--sal: env(safe-area-inset-left, 0px);
 	/*
-	  字体栈只保留项目自带 webfont（static/fonts 的 GI_*_Web），不列任何系统字体名。
+	  字体栈只保留项目自带 webfont（static/fonts），不列任何系统字体名。
 	  用户裁定（2026-11-04）：「不要采用系统字体，就用自带的原生字体」。
-	  原先的 Arial/-apple-system/'Segoe UI'/Roboto 等回退名会让 webfont 加载完成前
-	  （或加载失败时）渲染成系统字体观感，造成「字体不统一」。
-	  末尾的 sans-serif 是 CSS 规范要求的终极 generic 兜底（不是具体系统字体名）。
+	  中文栈（2026-11-05 修正）：GI_ZH_Web 子集仅 1595 字形，缺「建/义/己/官/样」等
+	  常用字，缺字逐字回退系统黑体与 GI 字形混排 = 「粗细随机」。改为 GI_Global_Web
+	  （拉丁/数字，保留游戏风味）+ Noto_SC_Web（思源黑体 OFL，30890 码点全覆盖）
+	  双 webfont 栈：中文全部落在 Noto 单一字体族，不再混排；末尾 sans-serif 仅是
+	  CSS 规范要求的终极 generic 兜底。
 	*/
-	--gi-global-font: 'GI_Global_Web', sans-serif;
+	--gi-global-font: 'GI_Global_Web', 'Noto_SC_Web', sans-serif;
 	--gi-ja-font: 'GI_JA_Web', 'GI_Global_Web', sans-serif;
 	--gi-ko-font: 'GI_KO_Web', 'GI_Global_Web', sans-serif;
 	--gi-th-font: 'GI_TH_Web', 'GI_Global_Web', sans-serif;
-	--gi-zh-font: 'GI_ZH_Web', 'GI_Global_Web', sans-serif;
+	--gi-zh-font: 'GI_Global_Web', 'Noto_SC_Web', sans-serif;
 	--secondary-color: #4f6d95;
 	--tertiary-color: #f7f3d8;
 	--text-color: #444444;
@@ -49,17 +51,27 @@
 	background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-	background-color: rgba(0, 0, 0, 0.25);
+	/* 用户 2026-11-05：灰条只在滑动时冒出来，静止时隐藏更干净。
+	   +layout 的全局 scroll 监听给正在滚动的容器加 .is-scrolling 类 */
+	background-color: transparent;
 	border-radius: 5px;
-	transition: all 0.2s;
+	transition: background-color 0.25s;
+}
+.is-scrolling::-webkit-scrollbar-thumb,
+.is-scrolling *::-webkit-scrollbar-thumb {
+	background-color: rgba(0, 0, 0, 0.25);
 }
 ::-webkit-scrollbar-thumb:hover {
 	background-color: rgba(0, 0, 0, 0.45);
 }
 
-/* Firefox：细条 + 灰色滑块 */
+/* Firefox：细条；滑块色同样跟随 .is-scrolling（scrollbar-color 不支持过渡，瞬时切换） */
 * {
 	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+}
+.is-scrolling,
+.is-scrolling * {
 	scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
 }
 

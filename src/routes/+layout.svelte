@@ -25,6 +25,8 @@
 	import { syncCustomBanner } from '$lib/helpers/banner-custom';
 	// 本项目：点名名单 store 的应用级初始化入口
 	import { initRollcall } from '$lib/helpers/dataAPI/api-rollcall';
+	// 副作用导入：OverlayScrollbars 全局默认（灰条滑动时才显示），须早于子组件实例化
+	import '$lib/helpers/os-defaults';
 	// import { initializeDriveAPI } from '$lib/helpers/dataAPI/google-api';
 	import '../app.css';
 
@@ -95,6 +97,25 @@
 		// 本项目：点名名单 store 在应用启动时就初始化，
 		// 否则点名卡池卡面读不到勾选状态，会一直显示「还没有勾选任何名单」
 		initRollcall();
+
+		// 灰条「滑动时才冒出来」的原生滚动侧实现：捕获阶段监听所有 scroll，
+		// 给正在滚动的容器加 .is-scrolling（app.css 里 thumb/scrollbar-color 跟随它），
+		// 停滚 400ms 后移除（与 OverlayScrollbars 的 autoHideDelay 对齐）
+		const hideTimers = new WeakMap();
+		window.addEventListener(
+			'scroll',
+			(e) => {
+				const el = e.target;
+				if (!(el instanceof Element)) return;
+				el.classList.add('is-scrolling');
+				clearTimeout(hideTimers.get(el));
+				hideTimers.set(
+					el,
+					setTimeout(() => el.classList.remove('is-scrolling'), 400)
+				);
+			},
+			true
+		);
 		// initializeDriveAPI(); // Drive API for cloud Sync
 
 		document.addEventListener('storageUpdate', () => sync($autoExport));
@@ -145,18 +166,12 @@
 		type="font/woff2"
 		crossorigin
 	/>
-	<!-- 中文是默认语言，zh 字体必须与 global 同批 preload：
-	     否则首屏中文在 webfont 到达前无字可用（字体栈已按用户要求去掉系统字体回退） -->
+	<!-- 中文是默认语言，中文正文字体必须与 global 同批 preload：
+	     否则首屏中文在 webfont 到达前无字可用（字体栈已按用户要求去掉系统字体回退）。
+	     2026-11-05 起中文正文由 Noto_SC_Web 承担（GI_ZH 子集缺字已退场） -->
 	<link
 		rel="preload"
-		href="/fonts/optimized_zh_web.woff2"
-		as="font"
-		type="font/woff2"
-		crossorigin
-	/>
-	<link
-		rel="preload"
-		href="/fonts/optimized_zh_web.woff2"
+		href="/fonts/optimized_noto_sc_web.woff2"
 		as="font"
 		type="font/woff2"
 		crossorigin
@@ -232,11 +247,15 @@
 		font-style: normal;
 	}
 
+	/* 中文正文兜底字体（2026-11-05）：Noto Sans SC / 思源黑体（OFL-1.1），
+	   可变字体实例化 wght=400 后 woff2（scripts/make-zh-font.py 可复现）。
+	   GI_ZH_Web 子集缺常用字导致逐字回退混排，中文正文改由它单一字体族承担。 */
 	@font-face {
-		font-family: 'GI_ZH_Web';
-		src: url('/fonts/optimized_zh_web.woff2') format('woff2');
+		font-family: 'Noto_SC_Web';
+		src: url('/fonts/optimized_noto_sc_web.woff2') format('woff2');
 		font-weight: normal;
 		font-style: normal;
+		font-display: swap;
 	}
 
 	/* F10：马善政毛笔楷书（OFL-1.1，google/fonts 仓库 ofl/mashanzheng）。
