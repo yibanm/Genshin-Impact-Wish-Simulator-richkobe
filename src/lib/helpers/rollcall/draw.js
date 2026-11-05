@@ -16,12 +16,10 @@ import {
  * writePoolRemaining（单一数据源）。否则会和名单管理页的内存缓存互相覆盖，
  * 导致同一个人被点到两次。
  *
- * 星级规则：
- * - 预置名单条目自带真实 rarity（来自角色/武器数据），直接沿用，
- *   卡面金光/紫光与原版皮肤一致；
- * - 自定义名单条目无 rarity，按随机规则分配（复刻壳层）：
- *   单抽 50% 三星 / 30% 四星 / 20% 五星；
- *   十连第一个强制五星，其余 60% 三星 / 40% 四星。
+ * 星级规则（用户 2026-11-05 裁定）：
+ * - 星级只来自用户在名单里的自定义设置（3/4/5）；
+ * - 未设置一律按最普通的三星展示；
+ * - 星级与点名概率无关——抽取永远是全池等概率洗牌，星级只影响结果卡面观感。
  */
 
 /** Fisher-Yates 洗牌（原地打乱并返回） */
@@ -31,21 +29,6 @@ const shuffle = (arr) => {
 		[arr[i], arr[j]] = [arr[j], arr[i]];
 	}
 	return arr;
-};
-
-/** 自定义名单条目的随机星级（复刻壳层规则） */
-const randomRarity = (isFirstOfMulti) => {
-	if (isFirstOfMulti) return 5;
-	const r = Math.random();
-	if (r < 0.6) return 3;
-	return 4;
-};
-
-const singleRarity = () => {
-	const r = Math.random();
-	if (r < 0.5) return 3;
-	if (r < 0.8) return 4;
-	return 5;
 };
 
 /** 星辉/星尘结算数量，与原抽卡的里程碑规则保持一致 */
@@ -100,7 +83,7 @@ export const drawMembers = (count = 1) => {
 		const member = full[idx];
 		// 池索引可能因名单被编辑而越界，跳过并继续，避免崩溃
 		if (!member) continue;
-		const rarity = member.rarity || randomRarity(i === 0 && count > 1);
+		const rarity = member.rarity || 3;
 		results.push(toResult(member, rarity));
 	}
 
@@ -114,7 +97,7 @@ export const drawMembers = (count = 1) => {
 		const carriedResults = carried
 			.map((idx) => full[idx])
 			.filter(Boolean)
-			.map((m) => toResult(m, m.rarity || singleRarity()));
+			.map((m) => toResult(m, m.rarity || 3));
 		return carriedResults.concat(results).slice(0, count);
 	}
 

@@ -4,7 +4,7 @@ const fs = require('fs');
 const { pathToFileURL: toFileURL } = require('url');
 
 /**
- * 原神抽卡点名器 —— Electron 主进程（中文修改版）
+ * 原神祈愿模拟器 —— Electron 主进程（中文修改版）
  *
  * 加载方式说明（重要）：
  * SvelteKit 的构建产物使用根路径资源引用（/internal/...、/icons.css），
@@ -65,7 +65,7 @@ const createWindow = () => {
 		height: 800,
 		minWidth: 800,
 		minHeight: 520,
-		title: '原神抽卡点名器',
+		title: '原神祈愿模拟器',
 		autoHideMenuBar: true,
 		backgroundColor: '#f5f0e6',
 		webPreferences: {

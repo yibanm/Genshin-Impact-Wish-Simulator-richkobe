@@ -4,7 +4,7 @@
 	import { html } from '$post/privacy.md';
 
 	// prerender 首屏字典未加载完时 locale 为 null，$t 会 throw，回退兜底
-	$: h1Text = $locale ? $t('privacy.h1', { default: '原神抽卡点名器隐私政策' }) : '原神抽卡点名器隐私政策';
+	$: h1Text = $locale ? $t('privacy.h1', { default: '原神祈愿模拟器隐私政策' }) : '原神祈愿模拟器隐私政策';
 	$: titleText = $locale ? $t('title', { default: APP_TITLE }) : APP_TITLE;
 </script>
 

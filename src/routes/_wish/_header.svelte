@@ -322,6 +322,13 @@
 		overflow-y: hidden;
 		justify-content: flex-start;
 		scrollbar-width: thin;
+		/* 横向页签条灰条常显（用户 2026-11-05）：桌面横向容器滚轮默认不滚（要 Shift+滚轮），
+		   灰条再藏 = 用户无交互手段；竖滚仍按「滑动才显」裁定不变。
+		   两 class 特异性高于 app.css 的全局隐藏规则，无需 !important */
+		scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+	}
+	.button-wrapper.scrollable::-webkit-scrollbar-thumb {
+		background-color: rgba(0, 0, 0, 0.25);
 	}
 
 	/* flex 子项默认 flex-shrink:1：容器不够时页签会被压缩变形（aspect-ratio 破坏）

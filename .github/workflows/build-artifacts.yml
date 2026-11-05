@@ -58,7 +58,7 @@ jobs:
           # .env 被 gitignore（含占位密钥），CI 用环境变量注入品牌文案；
           # Vite 的 loadEnv 会读取 process.env 中 VITE_ 前缀变量
           VITE_HOST: ''
-          VITE_APP_TITLE: 原神抽卡点名器
+          VITE_APP_TITLE: 原神祈愿模拟器
           VITE_DESCRIPTION: 原神风格抽卡 + 多名单点名工具：无广告与第三方服务，可完全离线使用
           VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
 
@@ -91,7 +91,7 @@ jobs:
           # tauri 的 beforeBuildCommand 会再跑一次 vite build 覆盖 dist，
           # 这里必须重复注入品牌文案环境变量，否则第二次构建的 dist 会丢标题/描述
           VITE_HOST: ''
-          VITE_APP_TITLE: 原神抽卡点名器
+          VITE_APP_TITLE: 原神祈愿模拟器
           VITE_DESCRIPTION: 原神风格抽卡 + 多名单点名工具：无广告与第三方服务，可完全离线使用
           VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
           # Tauri 不需要代码签名证书即可产出未签名包；显式关掉避免它去找证书
@@ -120,7 +120,7 @@ jobs:
           # Cargo package name = genshin-wish-roll（见 src-tauri/Cargo.toml 的 name）
           $exe = "src-tauri\target\release\genshin-wish-roll.exe"
           if (-not (Test-Path $exe)) { throw "未找到 $exe，Tauri 可能未产出主程序" }
-          $stage = "portable\原神抽卡点名器.exe"
+          $stage = "portable\原神祈愿模拟器.exe"
           New-Item -ItemType Directory -Force -Path (Split-Path $stage) | Out-Null
           Copy-Item -Path $exe -Destination $stage -Force
           $size = (Get-Item $exe).Length / 1MB
@@ -162,7 +162,7 @@ jobs:
         run: npm run build
         env:
           VITE_HOST: ''
-          VITE_APP_TITLE: 原神抽卡点名器
+          VITE_APP_TITLE: 原神祈愿模拟器
           VITE_DESCRIPTION: 原神风格抽卡 + 多名单点名工具：无广告与第三方服务，可完全离线使用
           VITE_KEYWORDS: 原神,抽卡模拟器,祈愿,点名器,卡池,中文
 
@@ -277,7 +277,7 @@ jobs:
           # Release 不存在则创建（body 从 CHANGELOG 抽当前版本段）
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             awk -v v="## v$V" 'index($0,v)==1{f=1} f&&/^## v/&&index($0,v)!=1{exit} f{print}' CHANGELOG.md > body.md
-            gh release create "$TAG" --title "v$V — 原神抽卡点名器" --notes-file body.md
+            gh release create "$TAG" --title "v$V — 原神祈愿模拟器" --notes-file body.md
           fi
           gh release upload "$TAG" \
             "win/release/genshin-wish-roll-richkobe-$V-windows-x64-setup.exe" \

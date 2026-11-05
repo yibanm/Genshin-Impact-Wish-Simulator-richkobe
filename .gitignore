@@ -46,3 +46,7 @@ android/capacitor-cordova-android-plugins/build/
 android/app/src/main/assets/public/
 android/local.properties
 android/app/keystore.jks
+
+# 本地构建产物与本地预览配置（2026-11-05）
+output/
+.claude/

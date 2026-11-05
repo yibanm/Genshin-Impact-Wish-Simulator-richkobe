@@ -202,7 +202,7 @@ export const addMembers = (listId, names) => {
 			name,
 			chineseChar: name,
 			iconKey: null,
-			// F5：星级可自定义；null 表示未指定，点名时按随机规则分配（复刻壳层）
+			// F5：星级可自定义；null 表示未指定，点名时按最普通的三星展示（用户 2026-11-05 裁定）
 			rarity: Number.isInteger(rarity) && rarity >= 3 && rarity <= 5 ? rarity : null
 		});
 	});

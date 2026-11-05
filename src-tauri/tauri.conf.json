@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "原神抽卡点名器",
+  "productName": "原神祈愿模拟器",
   "version": "1.0.1",
   "identifier": "com.richkobe.genshinwishroll",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "原神抽卡点名器",
+        "title": "原神祈愿模拟器",
         "width": 1280,
         "height": 800,
         "minWidth": 800,
