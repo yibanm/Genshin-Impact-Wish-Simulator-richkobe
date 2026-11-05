@@ -65,19 +65,28 @@
 		videoContent.muted = !!muted;
 		// 安卓闪屏根因之一：先 display 再 play，video 元素在首帧解码完成前就露出，
 		// 底下是黑 wrapper 与页面内容的混合，观感为「闪一下废图」。
-		// 改为等 canplay（首帧可绘）后再显示并播放；超时兜底仍显示，避免永久黑屏。
-		await new Promise((resolve) => {
-			let done = false;
-			const finish = () => {
-				if (done) return;
-				done = true;
-				videoContent.removeEventListener('canplay', finish);
-				clearTimeout(timer);
-				resolve();
-			};
-			const timer = setTimeout(finish, 1500);
-			videoContent.addEventListener('canplay', finish);
-		});
+		// 改为等首帧可绘后再显示并播放；超时兜底仍显示，避免永久黑屏。
+		// 竞态防护：blob URL 解码极快时 canplay 会在 addEventListener 之前触发，
+		// 漏掉事件就得白等满超时——先查 readyState（>=3 即 HAVE_FUTURE_DATA，canplay 同义）。
+		if (videoContent.readyState < 3) {
+			await new Promise((resolve) => {
+				let done = false;
+				const finish = () => {
+					if (done) return;
+					done = true;
+					videoContent.removeEventListener('canplay', finish);
+					clearTimeout(timer);
+					resolve();
+				};
+				const timer = setTimeout(finish, 1500);
+				videoContent.addEventListener('canplay', finish);
+				// 注册后再查一次：src 赋值到注册之间的窗口里事件可能已触发并推进了 readyState
+				if (videoContent.readyState >= 3) finish();
+			});
+		}
+		// 等待期间用户可能已跳过（esc/点击）：show 已被父级置 false，
+		// 此时再显示播放会让「跳过的视频继续播」，直接放弃本次播放
+		if (!show) return;
 		videoContent.style.display = 'unset';
 		await videoContent.play();
 		return;
