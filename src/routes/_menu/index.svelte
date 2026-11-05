@@ -129,6 +129,9 @@
 	.content {
 		width: 70%;
 		position: relative;
+		/* 子页（自定义卡池等）的 height:100% 滚动链依赖父级有确定高度；
+		   缺这行时子页容器被内容撑开、overflow 永不触发（安卓窄屏整页滑不动） */
+		height: 100%;
 	}
 
 	:global(.mobile) .close {

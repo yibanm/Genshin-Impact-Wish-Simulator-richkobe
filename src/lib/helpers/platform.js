@@ -44,17 +44,15 @@ const loadFsWriteText = () =>
 	import('@tauri-apps/plugin-fs')
 		.then((m) => m.writeTextFile)
 		.catch(() => null);
-const loadCapFilesystem = () =>
-	import('@capacitor/filesystem')
-		.then((m) => m.Filesystem)
-		.catch(() => null);
-const loadCapShare = () =>
-	import('@capacitor/share')
-		.then((m) => m.Share)
-		.catch(() => null);
 const loadCapApp = () =>
 	import('@capacitor/app')
 		.then((m) => m.App)
+		.catch(() => null);
+// 自研原生插件（android/app/.../MediaSaverPlugin.java）：写系统公共 Download 目录。
+// registerPlugin 按名字解析原生实现；非安卓平台调用方法会 reject，由调用方回退。
+const loadMediaSaver = () =>
+	import('@capacitor/core')
+		.then((m) => m.registerPlugin('MediaSaver'))
 		.catch(() => null);
 
 /**
@@ -123,36 +121,51 @@ const saveTextFileTauri = async (text, filename) => {
 };
 
 /**
- * 安卓导出：写缓存目录 + 唤起系统分享面板。
- * 为什么是这两步：WebView 无下载管理器；CACHE 目录不需要任何存储权限
- * （不必申请 WRITE_EXTERNAL_STORAGE）；分享面板让用户自己选去处（存文件/发微信/传电脑）。
+ * 安卓保存：经自研 MediaSaver 插件写系统公共 Download 目录（用户 2026-11-05 要求）。
+ * API 29+ 走 MediaStore.Downloads 免权限；24-28 落应用外部目录子文件夹（插件内回落）。
+ * 旧的「缓存目录 + 分享面板」路线废弃：分享面板被取消后回退 <a download> 在 WebView
+ * 被静默忽略，用户看到的就是「导出按钮无效」。
+ *
+ * @param {Blob|string} payload Blob（截图）或文本字符串（备份）
+ * @param {string} filename 目标文件名
+ * @param {string} mime MIME 类型
+ * @returns {Promise<boolean>} true = 原生通道已处理；false = 调用方回退 Web 下载
  */
-const saveTextFileAndroid = async (text, filename) => {
-	const Filesystem = await loadCapFilesystem();
-	const Share = await loadCapShare();
-	if (!Filesystem || !Share) return false;
-
+const saveViaMediaStore = async (payload, filename, mime) => {
+	const saver = await loadMediaSaver();
+	if (!saver?.saveToDownloads) return false;
 	try {
-		const written = await Filesystem.writeFile({
-			path: filename,
-			data: text,
-			directory: 'CACHE',
-			encoding: 'UTF8',
-			// 同名备份文件直接覆盖，避免用户第二次导出时因文件已存在而失败
-			recursive: true
-		});
-
-		await Share.share({
-			title: filename,
-			text: filename,
-			url: written.uri,
-			dialogTitle: filename
-		});
-		return true;
+		const base64 =
+			typeof payload === 'string'
+				? btoa(unescape(encodeURIComponent(payload)))
+				: await blobToBase64(payload);
+		const res = await saver.saveToDownloads({ name: filename, mime, base64 });
+		return !!res?.path;
 	} catch (e) {
-		// 用户在分享面板点取消会走到这里，不算故障，但仍回退一次 Web 下载兜底
+		// 非安卓环境或插件未注册：回退
+		console.error('MediaSaver 保存失败：', e);
 		return false;
 	}
+};
+
+// Blob → base64（去掉 data: 前缀），供插件的 Base64.decode 消费
+const blobToBase64 = (blob) =>
+	new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+		reader.onerror = () => reject(reader.error);
+		reader.readAsDataURL(blob);
+	});
+
+const saveTextFileAndroid = (text, filename) =>
+	saveViaMediaStore(text, filename, 'application/octet-stream');
+
+/**
+ * 安卓保存截图到 Download 目录。非安卓返回 false 由调用方回退 saveAs。
+ */
+export const saveBlobNative = async (blob, filename, mime = 'image/png') => {
+	if (isNativeAndroid()) return saveViaMediaStore(blob, filename, mime);
+	return false;
 };
 
 /**

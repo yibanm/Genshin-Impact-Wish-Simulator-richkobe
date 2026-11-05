@@ -360,6 +360,10 @@
 		width: 120px;
 		margin-top: 0;
 		height: 100%;
+		/* 安卓竖列滚动的关键：父级 .banner-button 无高度约束时 height:100% 失效，
+		   竖列被内容撑开、overflow 永不触发，页签栏溢出被裁切——用户看到
+		   「只剩最新的卡池、没有滑动条」。max-height 兜住视口高度让滚动生效。 */
+		max-height: calc(var(--screen-height) - 6rem);
 		justify-content: flex-start;
 		padding-top: 2.5rem;
 		/* C3：移动端页签是竖列且高度固定，页签多了必须能竖向滚动，

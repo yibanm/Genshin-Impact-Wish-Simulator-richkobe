@@ -221,7 +221,7 @@
 	.item.selected {
 		background-color: #d2c69c;
 		border-color: rgb(206, 160, 100);
-		font-weight: bold;
+		font-weight: normal;
 		box-shadow: 0 0 0.2rem #ce9c56;
 	}
 

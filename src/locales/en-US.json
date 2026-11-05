@@ -691,5 +691,6 @@
 		"featured": "Featured",
 		"tipTitle": "Tip the author",
 		"tipHint": "If you find this project fun or helpful, scan the WeChat QR code below to buy the author a milk tea"
-	}
+	},
+	"screenshotSaved": "Screenshot saved to the Download folder"
 }

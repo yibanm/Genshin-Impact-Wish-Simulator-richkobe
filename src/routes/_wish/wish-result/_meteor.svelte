@@ -62,8 +62,23 @@
 		}
 
 		videoContent.src = $assets[`${vidSrc}.mp4`];
-		videoContent.style.display = 'unset';
 		videoContent.muted = !!muted;
+		// 安卓闪屏根因之一：先 display 再 play，video 元素在首帧解码完成前就露出，
+		// 底下是黑 wrapper 与页面内容的混合，观感为「闪一下废图」。
+		// 改为等 canplay（首帧可绘）后再显示并播放；超时兜底仍显示，避免永久黑屏。
+		await new Promise((resolve) => {
+			let done = false;
+			const finish = () => {
+				if (done) return;
+				done = true;
+				videoContent.removeEventListener('canplay', finish);
+				clearTimeout(timer);
+				resolve();
+			};
+			const timer = setTimeout(finish, 1500);
+			videoContent.addEventListener('canplay', finish);
+		});
+		videoContent.style.display = 'unset';
 		await videoContent.play();
 		return;
 	};

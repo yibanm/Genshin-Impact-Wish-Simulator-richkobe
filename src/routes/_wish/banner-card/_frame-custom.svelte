@@ -314,7 +314,7 @@
 		right: 2%;
 		bottom: 2%;
 		font-style: italic;
-		font-weight: bold;
+		font-weight: normal;
 		color: #fff;
 		font-size: calc(0.035 * var(--content-height));
 		font-family: inherit;

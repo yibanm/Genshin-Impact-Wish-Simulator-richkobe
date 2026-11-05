@@ -141,7 +141,7 @@
 	}
 	.row.head {
 		background-color: #dbd7d3;
-		font-weight: bold;
+		font-weight: normal;
 	}
 	.body .row {
 		border-top: 0;

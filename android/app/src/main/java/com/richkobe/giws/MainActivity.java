@@ -20,6 +20,8 @@ public class MainActivity extends BridgeActivity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		// 注册自研 MediaSaver 插件：备份/截图直接写系统公共 Download 目录
+		add(MediaSaverPlugin.class);
 		super.onCreate(savedInstanceState);
 		applyImmersive();
 	}

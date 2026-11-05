@@ -230,7 +230,7 @@
 	h4,
 	h5 {
 		color: #a28052;
-		font-weight: 500;
+		font-weight: normal;
 		font-size: larger;
 		margin-top: 1%;
 		margin-bottom: 2%;

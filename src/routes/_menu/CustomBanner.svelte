@@ -229,6 +229,11 @@
 		border-radius: 0.5rem;
 		color: var(--text-color);
 		padding: 2%;
+		/* 撑满父级并锁死高度，内部 .wrapper 才能产生滚动条（安卓窄屏下滑区域小的解法） */
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	@media screen and (max-width: 700px) {
@@ -311,7 +316,7 @@
 		background-color: rgba(217, 67, 67, 0.75);
 		font-family: inherit;
 		font-size: 100%;
-		font-weight: bold;
+		font-weight: normal;
 	}
 
 	.wrapper {

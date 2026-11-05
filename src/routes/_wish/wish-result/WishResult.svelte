@@ -250,6 +250,10 @@
 	.wish-result {
 		background-size: cover;
 		background-position: center;
+		/* 背景图（星空）解码完成前容器无底色会露出应用米白底，
+		   流星动画结束切到结果页的瞬间白闪一帧（安卓解码慢尤其明显）；
+		   黑底与星空背景同色系，过渡无感 */
+		background-color: #000;
 	}
 
 	.wish-result {

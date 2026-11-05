@@ -36,7 +36,7 @@
 		flex-wrap: wrap;
 		margin: 1% auto 0;
 		font-family: inherit;
-		font-weight: 600;
+		font-weight: normal;
 	}
 
 	.legend .item {

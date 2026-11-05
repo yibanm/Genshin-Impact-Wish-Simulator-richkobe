@@ -143,7 +143,7 @@
 
 	h2 {
 		font-size: 1.5rem;
-		font-weight: 500;
+		font-weight: normal;
 		padding: 1rem 0;
 		margin: 1.5rem 0 0.5rem;
 	}

@@ -127,7 +127,7 @@
 	}
 
 	.updates span {
-		font-weight: bold;
+		font-weight: normal;
 		color: #f7cf33;
 		display: block;
 		padding-top: 0.5rem;
@@ -170,7 +170,7 @@
 		transition: all 0.2s;
 	}
 	.sp a {
-		font-weight: bold;
+		font-weight: normal;
 		color: #e3a023;
 		font-family: inherit;
 	}

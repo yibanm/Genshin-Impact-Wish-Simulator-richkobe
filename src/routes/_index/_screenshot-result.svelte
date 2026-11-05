@@ -8,6 +8,8 @@
 	import { isMobile } from '$lib/store/app-stores';
 	import { playSfx } from '$lib/helpers/audio/audio';
 	import { copy } from '$lib/helpers/nameText';
+	import { saveBlobNative } from '$lib/helpers/platform';
+	import { pushToast } from '$lib/helpers/toast';
 
 	export let canshare = false;
 	export let isFirstTime = false;
@@ -40,9 +42,14 @@
 		addFunds();
 	};
 
-	const saveHandler = () => {
+	const saveHandler = async () => {
 		playSfx();
-		saveAs(blob, `genshin-wish-roll - ${new Date().toLocaleString()}.png`);
+		const filename = `genshin-wish-roll - ${new Date().toLocaleString()}.png`;
+		// 安卓：file-saver 的 <a download> 在 WebView 被静默忽略（「保存按钮无效」），
+		// 走自研插件直存系统 Download 目录；其余平台回退 saveAs
+		const saved = await saveBlobNative(blob, filename);
+		if (saved) pushToast({ message: $t('screenshotSaved'), type: 'success' });
+		else saveAs(blob, filename);
 		addFunds();
 	};
 

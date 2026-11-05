@@ -507,7 +507,7 @@
 	}
 
 	.label {
-		font-weight: 600;
+		font-weight: normal;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

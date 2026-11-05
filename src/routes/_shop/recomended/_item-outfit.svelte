@@ -137,7 +137,7 @@
 	}
 	span.name {
 		color: #3c4b5e;
-		font-weight: bold;
+		font-weight: normal;
 		display: block;
 		margin: 5% 0;
 	}

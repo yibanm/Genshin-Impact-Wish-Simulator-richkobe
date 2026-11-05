@@ -94,7 +94,7 @@
 		border-radius: 2rem;
 		background-color: #fff6e2;
 		color: #8a5a00;
-		font-weight: 600;
+		font-weight: normal;
 	}
 
 	.tip {
