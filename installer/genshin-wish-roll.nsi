@@ -6,6 +6,9 @@ Unicode true
 
 !define APPNAME "GenshinWishRoll"
 !define APPNAME_CN "原神祈愿模拟器"
+; 版本号与 package.json 同步；改版本时两处一起改。
+; CI 用 package.json 版本做 Test-Path 校验产物名，不一致会红（不会静默发错版本）。
+; 注：makensis 的 /DVERSION 不生效（!ifndef 检测不到命令行定义），故用硬编码。
 !define VERSION "1.0.1"
 !define PUBLISHER "richkobe"
 !define URL "https://github.com/yibanm/Genshin-Impact-Wish-Simulator-richkobe"

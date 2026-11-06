@@ -80,13 +80,10 @@ jobs:
           [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\dist", "$PWD\$out", [System.IO.Compression.CompressionLevel]::Optimal, $false)
           Write-Host "已生成 $out"
 
-      # Tauri 桌面版（替代 Electron）：壳只有 ~8MB，WebView2 由系统提供。
-      # 前端资源被内嵌进 exe，所以「便携版」就是单个 exe 压成 zip，
-      # 不像 Electron 需要打包整个 win-unpacked 目录（那是 287MB 便携版的主因）。
-      # beforeBuildCommand 已在 tauri.conf.json 里配置为 npm run build，
-      # 但上面的 Build web bundle 步骤已经产出 dist，Tauri 会直接用（不重复构建）。
+      # 桌面版：只编译主程序 exe（--no-bundle），安装器由下方自写 NSIS MUI2 脚本负责，
+      # 便携版直接把这个 exe 压 zip。不再需要 Tauri 自带 NSIS bundle。
       - name: Build Tauri app
-        run: npx tauri build --bundles nsis
+        run: npx tauri build --no-bundle
         env:
           # tauri 的 beforeBuildCommand 会再跑一次 vite build 覆盖 dist，
           # 这里必须重复注入品牌文案环境变量，否则第二次构建的 dist 会丢标题/描述
@@ -98,18 +95,31 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ''
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
-      # NSIS 产物名含中文 productName，用 glob 定位而非硬编码，
-      # 再统一改名对齐 0.10 规范
-      - name: Normalize setup exe name
+      # 安装器：用自写 NSIS MUI2 脚本（茶话式左大图 + 可改图标），替代 Tauri 默认简化模板。
+      # .nsi 脚本用相对路径引用 exe/bmp，必须在 installer 目录里编译；产物落在 ../output/。
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            choco install nsis --no-progress -y
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          }
+          makensis /VERSION
+
+      - name: Build MUI2 installer
         shell: pwsh
         run: |
           $v = "${{ steps.ver.outputs.version }}"
-          $target = "genshin-wish-roll-richkobe-$v-windows-x64-setup.exe"
-          $found = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*setup*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $found) { throw "未在 src-tauri\target\release\bundle\nsis 找到 setup exe" }
+          New-Item -ItemType Directory -Force -Path output | Out-Null
+          Push-Location installer
+          makensis /V2 genshin-wish-roll.nsi
+          if ($LASTEXITCODE -ne 0) { Pop-Location; throw "makensis 编译失败 (exit $LASTEXITCODE)" }
+          Pop-Location
+          $mui = "output\genshin-wish-roll-richkobe-$v-windows-x64-setup.exe"
+          if (-not (Test-Path $mui)) { throw "MUI2 installer 未产出: $mui" }
           New-Item -ItemType Directory -Force -Path release | Out-Null
-          Copy-Item -Path $found.FullName -Destination "release\$target" -Force
-          Write-Host "安装版: $($found.Name) -> $target"
+          Copy-Item -Path $mui -Destination "release\genshin-wish-roll-richkobe-$v-windows-x64-setup.exe" -Force
+          Write-Host "安装版(MUI2): $mui -> release\"
 
       # 便携版：Tauri 的 exe 自带前端资源，单文件即可运行，直接压 zip
       - name: Package portable zip
