@@ -97,14 +97,25 @@ jobs:
 
       # 安装器：用自写 NSIS MUI2 脚本（茶话式左大图 + 可改图标），替代 Tauri 默认简化模板。
       # .nsi 脚本用相对路径引用 exe/bmp，必须在 installer 目录里编译；产物落在 ../output/。
+      # 注意：--no-bundle 后 Tauri 不再自动下载 NSIS，必须自己装；choco 的 nsis 包不改 PATH，
+      # 装完要显式定位 makensis.exe 并写进 GITHUB_PATH，下一个 step 才能直接调用。
       - name: Install NSIS
         shell: pwsh
         run: |
-          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
-            choco install nsis --no-progress -y
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          choco install nsis --no-progress -y
+          $found = $null
+          foreach ($p in @(
+            "C:\Program Files (x86)\NSIS\makensis.exe",
+            "C:\ProgramData\chocolatey\bin\makensis.exe"
+          )) { if (Test-Path $p) { $found = $p; break } }
+          if (-not $found) {
+            $found = (Get-ChildItem -Path "C:\Program Files (x86)\NSIS","C:\ProgramData\chocolatey" `
+              -Recurse -Filter makensis.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
           }
-          makensis /VERSION
+          if (-not $found) { throw "choco 安装后未找到 makensis.exe" }
+          Add-Content -Path $env:GITHUB_PATH -Value (Split-Path $found)
+          & $found /VERSION
+          Write-Host "makensis 定位: $found"
 
       - name: Build MUI2 installer
         shell: pwsh
