@@ -24,6 +24,8 @@ public class MainActivity extends BridgeActivity {
 		// Capacitor 8 的注册 API 是 registerPlugin(Class)，须在 super.onCreate 前调用
 		registerPlugin(MediaSaverPlugin.class);
 		super.onCreate(savedInstanceState);
+		// WebView 默认媒体播放需用户手势，流星视频/异步音效会被静默拦截
+		getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
 		applyImmersive();
 	}
 

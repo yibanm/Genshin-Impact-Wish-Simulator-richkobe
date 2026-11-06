@@ -52,17 +52,17 @@ Section "Install"
 	WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoModify" 1
 	WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoRepair" 1
 	; 开始菜单（英文文件夹）+ 桌面快捷方式默认创建（用户上轮怒斥缺快捷方式）
-	CreateDirectory "$SMPROGRAMS\${APPNAME}"
-	CreateShortcut "$SMPROGRAMS\${APPNAME}\${APPNAME_CN}.lnk" "$INSTDIR\${APPNAME}.exe"
-	CreateShortcut "$SMPROGRAMS\${APPNAME}\卸载 ${APPNAME_CN}.lnk" "$INSTDIR\uninstall.exe"
+	CreateDirectory "$SMPROGRAMS\${APPNAME_CN}"
+	CreateShortcut "$SMPROGRAMS\${APPNAME_CN}\${APPNAME_CN}.lnk" "$INSTDIR\${APPNAME}.exe"
+	CreateShortcut "$SMPROGRAMS\${APPNAME_CN}\卸载 ${APPNAME_CN}.lnk" "$INSTDIR\uninstall.exe"
 	CreateShortcut "$DESKTOP\${APPNAME_CN}.lnk" "$INSTDIR\${APPNAME}.exe"
 SectionEnd
 
 Section "Uninstall"
 	Delete "$DESKTOP\${APPNAME_CN}.lnk"
-	Delete "$SMPROGRAMS\${APPNAME}\${APPNAME_CN}.lnk"
-	Delete "$SMPROGRAMS\${APPNAME}\卸载 ${APPNAME_CN}.lnk"
-	RMDir "$SMPROGRAMS\${APPNAME}"
+	Delete "$SMPROGRAMS\${APPNAME_CN}\${APPNAME_CN}.lnk"
+	Delete "$SMPROGRAMS\${APPNAME_CN}\卸载 ${APPNAME_CN}.lnk"
+	RMDir "$SMPROGRAMS\${APPNAME_CN}"
 	Delete "$INSTDIR\${APPNAME}.exe"
 	Delete "$INSTDIR\uninstall.exe"
 	RMDir /r "$INSTDIR"

@@ -54,6 +54,14 @@ const soundInit = () => {
 			loop: key === 'wishBacksound'
 		});
 	});
+	// 页面加载期（无用户手势）创建的 AudioContext 被挂起，howler 在桌面/WebView 不自动解锁：
+	// 首次交互 resume 一次，否则异步回调里的音效（抽卡揭示音等）永远静音
+	const unlock = () => {
+		if (Howler.ctx && Howler.ctx.state === 'suspended') Howler.ctx.resume();
+	};
+	['pointerdown', 'keydown', 'touchstart'].forEach((ev) =>
+		window.addEventListener(ev, unlock, true)
+	);
 };
 soundInit();
 
