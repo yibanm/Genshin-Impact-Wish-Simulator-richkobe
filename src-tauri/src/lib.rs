@@ -6,6 +6,8 @@ pub fn run() {
     .plugin(tauri_plugin_dialog::init())
     // fs：把导出的 JSON 文本写到用户选定路径
     .plugin(tauri_plugin_fs::init())
+    // opener：WebView 拦截 <a target="_blank">，外链须交给系统浏览器打开
+    .plugin(tauri_plugin_opener::init())
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

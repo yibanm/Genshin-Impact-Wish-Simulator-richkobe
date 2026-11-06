@@ -27,3 +27,5 @@ tauri-plugin-log = "2"
 # 不装这两个插件的话从 Electron 迁过来会弄坏导出功能
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+# 外链跳转：WebView 默认拦截 <a target="_blank">，须由 opener 插件交给系统浏览器
+tauri-plugin-opener = "2"

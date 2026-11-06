@@ -1,5 +1,6 @@
 :root {
-	letter-spacing: -0.02rem;
+	/* 原神 UI 正文是疏朗正字距；负字距让中文发挤、与游戏观感相反（v1.0.2 用户裁定） */
+	letter-spacing: 0.02em;
 	/*
 	  安全区内边距变量（B2）：贴边元素用 calc() 叠加，避免逐处硬编码。
 	  必须带 0px 兜底——不支持 env() 的环境（桌面浏览器/老 WebView）下，
@@ -19,12 +20,16 @@
 	  （拉丁/数字，保留游戏风味）+ Noto_SC_Web（思源黑体 OFL，30890 码点全覆盖）
 	  双 webfont 栈：中文全部落在 Noto 单一字体族，不再混排；末尾 sans-serif 仅是
 	  CSS 规范要求的终极 generic 兜底。
+	  v1.0.2 修正：正文栈改 Noto 优先。GI_Global_Web 是游戏 logo 风格粗拉丁体，排在
+	  前面会让同段拉丁/数字（v1.0.1、richkobe、miHoYo）比中文粗一档，观感「假加粗」；
+	  原神 UI 正文本就是单一黑体族，logo 体只用于标题美术字。游戏风拉丁保留在
+	  --gi-global-font（语言选择等装饰位）。
 	*/
 	--gi-global-font: 'GI_Global_Web', 'Noto_SC_Web', sans-serif;
 	--gi-ja-font: 'GI_JA_Web', 'GI_Global_Web', sans-serif;
 	--gi-ko-font: 'GI_KO_Web', 'GI_Global_Web', sans-serif;
 	--gi-th-font: 'GI_TH_Web', 'GI_Global_Web', sans-serif;
-	--gi-zh-font: 'GI_Global_Web', 'Noto_SC_Web', sans-serif;
+	--gi-zh-font: 'Noto_SC_Web', sans-serif;
 	--secondary-color: #4f6d95;
 	--tertiary-color: #f7f3d8;
 	--text-color: #444444;
@@ -299,7 +304,7 @@ input,
 button {
 	font-size: inherit;
 	font-family: inherit;
-	letter-spacing: -0.03rem;
+	letter-spacing: 0.03em;
 }
 
 button:focus:not(:focus-visible) {

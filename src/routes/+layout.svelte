@@ -121,6 +121,26 @@
 		document.addEventListener('storageUpdate', () => sync($autoExport));
 		// prevent Righ click (hold on android) on production mode
 		if (!dev) document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+		// Tauri 的 WebView 拦截 <a target="_blank"> 的新窗口请求（点击零反应），
+		// 委托给 opener 插件交系统浏览器；Web/安卓保持原生行为不碰
+		if (window.__TAURI_INTERNALS__) {
+			document.addEventListener(
+				'click',
+				(e) => {
+					const a =
+						e.target instanceof Element
+							? e.target.closest('a[target="_blank"][href^="http"]')
+							: null;
+					if (!a) return;
+					e.preventDefault();
+					import('@tauri-apps/plugin-opener')
+						.then((m) => m.openUrl(a.href))
+						.catch((err) => console.error('openUrl 失败', err));
+				},
+				true
+			);
+		}
 	});
 </script>
 
