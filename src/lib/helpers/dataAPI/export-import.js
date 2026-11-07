@@ -1,8 +1,10 @@
-import { BannerManager, HistoryManager } from './api-indexeddb';
+import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
+import { BannerManager, HistoryManager, AssetManager } from './api-indexeddb';
 import { cookie } from './api-cookie';
 import { storageLocal } from './api-localstore';
 import { randomNumber } from '../gacha/itemdrop-base';
-import { saveTextFileNative } from '../platform';
+import { saveBlobNative, saveTextFileNative } from '../platform';
+import { fireMirror } from './api-filestore';
 
 const generateExportID = () => {
 	const { id } = storageLocal.get('export');
@@ -11,60 +13,125 @@ const generateExportID = () => {
 	storageLocal.set('export', { id: exportID, date });
 };
 
-export const generateFileString = async () => {
+/**
+ * 收集全部用户数据（与 data/ 明文镜像同分类）。
+ * 图标是二进制，单独放 icons/ 目录 + manifest 记 key→type。
+ */
+const collectAll = async () => {
 	const banners = await BannerManager.getAll();
 	const histories = await HistoryManager.getAllHistories();
 	const accessKey = cookie.get('accessKey');
-
 	generateExportID();
 	const settings = storageLocal.getData();
-	const dataToExport = { banners, histories, settings, accessKey };
-	return JSON.stringify(dataToExport);
+	const rollcallRaw = localStorage.getItem('rollcall');
+	const icons = await AssetManager.getAll();
+
+	const files = {
+		'config.json': strToU8(JSON.stringify({ settings, accessKey }, null, 2)),
+		'history.json': strToU8(JSON.stringify(histories, null, 2)),
+		'banners.json': strToU8(JSON.stringify(banners, null, 2)),
+		'manifest.json': strToU8(
+			JSON.stringify({ app: 'genshin-wish-roll', format: 'zip-plain', version: 2, exportedAt: new Date().toISOString() }, null, 2)
+		)
+	};
+	if (rollcallRaw) files['rollcall.json'] = strToU8(JSON.stringify(JSON.parse(rollcallRaw), null, 2));
+	const manifest = {};
+	for (const rec of icons) {
+		if (!rec?.key || !rec?.blob) continue;
+		const type = rec.type || rec.blob.type || 'image/png';
+		manifest[rec.key] = { type };
+		// 图标在 zip 内直接存原始二进制（fflate 收 Uint8Array）
+		files[`icons/${encodeURIComponent(rec.key)}.${extOf(type)}`] = new Uint8Array(
+			await rec.blob.arrayBuffer()
+		);
+	}
+	files['icons/_manifest.json'] = strToU8(JSON.stringify(manifest, null, 2));
+	return files;
+};
+
+const extOf = (type) =>
+	({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' })[type] || 'bin';
+
+/** zip 文件名带日期时间（用户 2026-11-07 补加） */
+const stampFilename = () => {
+	const d = new Date();
+	const p = (n) => String(n).padStart(2, '0');
+	return `genshin-wish-roll_Backup_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}.zip`;
 };
 
 export const exportFileLegacy = async () => {
-	const text = await generateFileString();
-	const date = new Date().toLocaleDateString();
-	const filename = `genshin-wish-roll_Backup_${date}.bin`;
+	const files = await collectAll();
+	const zipped = zipSync(files, { level: 6 });
+	const blob = new Blob([zipped], { type: 'application/zip' });
+	const filename = stampFilename();
 
-	// 安卓原生壳里 WebView 没有下载管理器，下面的 <a download> 点击会被静默忽略
-	// （表现就是「导出按钮失效」）。先走原生通道：写缓存目录 + 系统分享面板。
-	const handledNatively = await saveTextFileNative(text, filename);
-	if (handledNatively) return;
-
-	const blob = new Blob([text], { type: 'text/plain' });
+	// 原生通道优先（安卓三级回落、桌面另存为）；都失败才回 Web 下载
+	const handled = await saveBlobNative(blob, filename, 'application/zip');
+	if (handled) {
+		fireMirror();
+		return;
+	}
 	const anchor = document.createElement('a');
-
 	anchor.download = filename;
 	anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-	anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
 	anchor.click();
+	fireMirror();
 };
 
-export const allowedType = 'application/octet-stream, application/json, text/plain';
+export const allowedType = 'application/octet-stream, application/json, text/plain, application/zip, application/x-zip-compressed';
 const isValidBackupFile = (file) => {
-	const checkType = allowedType.match(file.type);
-	const checkExt = file.name.match(/.(bin|json|txt)$/);
-	const isValidFile = checkType && checkExt;
-	return isValidFile;
+	const checkExt = file.name.match(/\.(bin|json|txt|zip)$/);
+	const checkType = allowedType.includes(file.type) || checkExt;
+	return Boolean(checkType && checkExt);
+};
+
+/** zip → placeDataToAppDB 要的 {banners, histories, settings, accessKey} 形状 */
+const parsedFromZip = async (buf) => {
+	const entries = unzipSync(new Uint8Array(buf));
+	const text = (name) => (entries[name] ? JSON.parse(strFromU8(entries[name])) : null);
+
+	const cfg = text('config.json') || {};
+	const histories = text('history.json') || [];
+	const banners = text('banners.json') || [];
+	const rollcall = text('rollcall.json');
+	const iconManifest = text('icons/_manifest.json') || {};
+
+	// 图标二进制回灌 IDB（zip 内即原始字节）
+	for (const [path, u8] of Object.entries(entries)) {
+		if (!path.startsWith('icons/') || path.endsWith('_manifest.json')) continue;
+		const key = decodeURIComponent(path.slice(6, path.lastIndexOf('.')));
+		const type = iconManifest[key]?.type || 'image/png';
+		await AssetManager.put({ key, blob: new Blob([u8], { type }), type });
+	}
+	if (rollcall) localStorage.setItem('rollcall', JSON.stringify(rollcall));
+
+	return {
+		banners,
+		histories,
+		settings: cfg.settings || { data: {} },
+		accessKey: cfg.accessKey || null
+	};
 };
 
 const verifyBackupFile = async (file) => {
 	try {
+		if (file.name.endsWith('.zip')) {
+			const parsed = await parsedFromZip(await file.arrayBuffer());
+			if (!parsed?.settings) return null;
+			return parsed;
+		}
 		const fileContent = await file.text();
 		const parsed = JSON.parse(fileContent);
 		const { id } = parsed?.settings?.data?.export || {};
 		if (!id) return null;
-		return parsed;
+		return parsed; // 旧单 JSON 备份兼容
 	} catch (e) {
 		return null;
 	}
 };
 
 export const parseFileObj = async (file) => {
-	const isValidFile = isValidBackupFile(file);
-	if (!isValidFile) throw new Error('Not a valid Backup File');
-
+	if (!isValidBackupFile(file)) throw new Error('Not a valid Backup File');
 	const parsedFile = await verifyBackupFile(file);
 	if (!parsedFile) throw new Error('Failed to parse imported file');
 	return parsedFile;
@@ -75,4 +142,3 @@ export const importFileLegacy = async (files) => {
 	const parsedFile = await parseFileObj(file);
 	return { file, parsedFile };
 };
-

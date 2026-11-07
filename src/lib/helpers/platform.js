@@ -133,17 +133,33 @@ const saveTextFileTauri = async (text, filename) => {
  */
 const saveViaMediaStore = async (payload, filename, mime) => {
 	const saver = await loadMediaSaver();
-	if (!saver?.saveToDownloads) return false;
+	if (saver?.saveToDownloads) {
+		try {
+			const base64 =
+				typeof payload === 'string'
+					? btoa(unescape(encodeURIComponent(payload)))
+					: await blobToBase64(payload);
+			const res = await saver.saveToDownloads({ name: filename, mime, base64 });
+			if (res?.path) return true;
+		} catch (e) {
+			console.error('MediaSaver 保存失败，回落应用外部目录：', e);
+		}
+	}
+	// 二级回落：应用外部目录 /storage/emulated/0/Android/data/<包名>/files/Download/
+	// （免权限、用户可用文件管理器看到；MediaSaver 未注册或 reject 时不再静默死路）
 	try {
-		const base64 =
-			typeof payload === 'string'
-				? btoa(unescape(encodeURIComponent(payload)))
-				: await blobToBase64(payload);
-		const res = await saver.saveToDownloads({ name: filename, mime, base64 });
-		return !!res?.path;
+		const { Filesystem, Directory } = await import('@capacitor/filesystem');
+		const data =
+			typeof payload === 'string' ? payload : await blobToBase64(payload);
+		const r = await Filesystem.writeFile({
+			path: `Download/${filename}`,
+			data,
+			directory: Directory.External,
+			recursive: true
+		});
+		return !!r.uri;
 	} catch (e) {
-		// 非安卓环境或插件未注册：回退
-		console.error('MediaSaver 保存失败：', e);
+		console.error('应用外部目录保存也失败：', e);
 		return false;
 	}
 };
@@ -161,10 +177,34 @@ const saveTextFileAndroid = (text, filename) =>
 	saveViaMediaStore(text, filename, 'application/octet-stream');
 
 /**
+ * 桌面（Tauri）保存二进制：弹「另存为」对话框 + fs 写二进制。
+ * WebView2 与安卓 WebView 一样不接管 <a download>，saveBlobNative 原实现
+ * 在 Tauri 分支直接 return false → 调用方回落 saveAs = 死路，
+ * 这就是桌面端「抽完卡截图保存不了」的根因（2026-11-07 用户报）。
+ */
+const saveBlobTauri = async (blob, filename) => {
+	const dialog = await loadDialogSave();
+	const writeFile = await import('@tauri-apps/plugin-fs')
+		.then((m) => m.writeFile)
+		.catch(() => null);
+	if (!dialog || !writeFile) return false;
+	try {
+		const path = await dialog({ defaultPath: filename });
+		if (!path) return true; // 用户取消，非故障
+		await writeFile(path, new Uint8Array(await blob.arrayBuffer()));
+		return true;
+	} catch (e) {
+		console.error('Tauri 保存二进制失败：', e);
+		return false;
+	}
+};
+
+/**
  * 安卓保存截图到 Download 目录。非安卓返回 false 由调用方回退 saveAs。
  */
 export const saveBlobNative = async (blob, filename, mime = 'image/png') => {
 	if (isNativeAndroid()) return saveViaMediaStore(blob, filename, mime);
+	if (isTauri()) return saveBlobTauri(blob, filename);
 	return false;
 };
 
