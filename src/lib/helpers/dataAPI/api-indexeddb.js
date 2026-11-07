@@ -87,6 +87,7 @@ export const HistoryManager = {
 		if (!data.hasOwnProperty('banner')) return;
 		const idb = await IndexedDB;
 		const put = await idb.put('history', data);
+		document.dispatchEvent(new Event('dataMirrorUpdate'));
 		return put;
 	},
 
@@ -103,7 +104,9 @@ export const AssetManager = {
 	async put(data) {
 		// eslint-disable-next-line no-prototype-builtins
 		if (!data.hasOwnProperty('key')) return;
-		return (await IndexedDB).put('assets', data);
+		const r = await (await IndexedDB).put('assets', data);
+		document.dispatchEvent(new Event('dataMirrorUpdate'));
+		return r;
 	},
 
 	async get(key) {
@@ -113,7 +116,14 @@ export const AssetManager = {
 
 	async delete(key) {
 		if (!key) return;
-		return (await IndexedDB).delete('assets', key);
+		const r = await (await IndexedDB).delete('assets', key);
+		document.dispatchEvent(new Event('dataMirrorUpdate'));
+		return r;
+	},
+
+	// 数据明文镜像层 dump 用：全量取图标记录
+	async getAll() {
+		return (await IndexedDB).getAll('assets');
 	}
 };
 
@@ -129,6 +139,7 @@ export const BannerManager = {
 		const idb = await IndexedDB;
 		const put = await idb.put('custombanner', { lastModified, ...data });
 		createEvent();
+		document.dispatchEvent(new Event('dataMirrorUpdate'));
 		return put;
 	},
 

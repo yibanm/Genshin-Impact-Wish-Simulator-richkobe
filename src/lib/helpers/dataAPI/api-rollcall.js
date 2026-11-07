@@ -70,6 +70,8 @@ const commit = () => {
 	writeState(state);
 	// 每次变更都推送完整快照，UI 只需订阅这一个 store
 	rollcallStore.set(snapshot());
+	// 数据明文镜像层监听此事件做防抖 dump（api-filestore）
+	document.dispatchEvent(new Event('rollcallUpdate'));
 };
 
 /**

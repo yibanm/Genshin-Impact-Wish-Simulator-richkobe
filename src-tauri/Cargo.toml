@@ -21,6 +21,8 @@ tauri-build = { version = "2.7.4", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
+# 数据明文镜像：图标二进制经 base64 过 invoke 边界
+base64 = "0.22"
 tauri = { version = "2.12.5", features = [] }
 tauri-plugin-log = "2"
 # 数据导出走原生「另存为」：WebView2 与安卓 WebView 一样不接管 <a download>，

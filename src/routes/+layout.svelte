@@ -25,6 +25,7 @@
 	import { syncCustomBanner } from '$lib/helpers/banner-custom';
 	// 本项目：点名名单 store 的应用级初始化入口
 	import { initRollcall } from '$lib/helpers/dataAPI/api-rollcall';
+	import { initFileMirror } from '$lib/helpers/dataAPI/api-filestore';
 	// 副作用导入：OverlayScrollbars 全局默认（灰条滑动时才显示），须早于子组件实例化
 	import '$lib/helpers/os-defaults';
 	// import { initializeDriveAPI } from '$lib/helpers/dataAPI/google-api';
@@ -97,6 +98,9 @@
 		// 本项目：点名名单 store 在应用启动时就初始化，
 		// 否则点名卡池卡面读不到勾选状态，会一直显示「还没有勾选任何名单」
 		initRollcall();
+		// 数据明文镜像：桌面=exe 同级 data/、安卓=外部应用目录 data/；
+		// 本地为空时从文件恢复，之后每次写入防抖 dump（Web 环境 no-op）
+		initFileMirror();
 
 		// 灰条「滑动时才冒出来」的原生滚动侧实现：捕获阶段监听所有 scroll，
 		// 给正在滚动的容器加 .is-scrolling（app.css 里 thumb/scrollbar-color 跟随它），
