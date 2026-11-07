@@ -53,16 +53,24 @@ const extOf = (type) =>
 	({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' })[type] || 'bin';
 
 /** zip 文件名带日期时间（用户 2026-11-07 补加） */
-const stampFilename = () => {
+export const stampFilename = () => {
 	const d = new Date();
 	const p = (n) => String(n).padStart(2, '0');
 	return `genshin-wish-roll_Backup_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}.zip`;
 };
 
-export const exportFileLegacy = async () => {
+/**
+ * 全量备份的 zip Blob（api-filesystem 的 FS handle 路径与 exportFileLegacy 共用）。
+ * 名字保留 generateFileString 是因为 api-filesystem.js 按此名 import；
+ * 返回类型从文本变为 zip Blob，写入端 createWritable 对 Blob 同样支持。
+ */
+export const generateFileString = async () => {
 	const files = await collectAll();
-	const zipped = zipSync(files, { level: 6 });
-	const blob = new Blob([zipped], { type: 'application/zip' });
+	return new Blob([zipSync(files, { level: 6 })], { type: 'application/zip' });
+};
+
+export const exportFileLegacy = async () => {
+	const blob = await generateFileString();
 	const filename = stampFilename();
 
 	// 原生通道优先（安卓三级回落、桌面另存为）；都失败才回 Web 下载
@@ -115,13 +123,17 @@ const parsedFromZip = async (buf) => {
 
 const verifyBackupFile = async (file) => {
 	try {
-		if (file.name.endsWith('.zip')) {
-			const parsed = await parsedFromZip(await file.arrayBuffer());
+		const buf = await file.arrayBuffer();
+		const u8 = new Uint8Array(buf);
+		// 按内容魔数判 zip（PK\x03\x04），不按扩展名——旧 FS handle 是 .bin
+		// 扩展名但自动导出已写入 zip 内容，按扩展名会误拒
+		const isZip = u8[0] === 0x50 && u8[1] === 0x4b;
+		if (isZip) {
+			const parsed = await parsedFromZip(buf);
 			if (!parsed?.settings) return null;
 			return parsed;
 		}
-		const fileContent = await file.text();
-		const parsed = JSON.parse(fileContent);
+		const parsed = JSON.parse(new TextDecoder().decode(u8));
 		const { id } = parsed?.settings?.data?.export || {};
 		if (!id) return null;
 		return parsed; // 旧单 JSON 备份兼容

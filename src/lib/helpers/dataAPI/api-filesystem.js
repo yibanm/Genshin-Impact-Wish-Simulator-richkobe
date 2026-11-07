@@ -6,7 +6,7 @@ import {
 	savingToSystem
 } from '$lib/store/filesystem-store';
 import { browserDetect } from '../mobileDetect';
-import { generateFileString, parseFileObj } from './export-import';
+import { generateFileString, parseFileObj, stampFilename } from './export-import';
 
 export const FSSupported = () => {
 	const { isSupported: browserSupported } = browserDetect();
@@ -66,16 +66,16 @@ export const verifyFSPermission = async (fileHandle, { checkOnly = false } = {})
 };
 
 const getNewFileHandle = () => {
-	const date = new Date().toLocaleDateString();
-	const suggestedName = `genshin-wish-roll_Backup_${date}.bin`;
+	// 备份自 1.0.2 起为 zip 明文压缩包（文件名带日期时间）
+	const suggestedName = stampFilename();
 	// For Chrome 86 and later...
 	if ('showSaveFilePicker' in window) {
 		const opts = {
 			suggestedName,
 			types: [
 				{
-					description: 'Text file',
-					accept: { 'text/plain': ['.bin'] }
+					description: 'Zip archive',
+					accept: { 'application/zip': ['.zip'] }
 				}
 			]
 		};
@@ -87,9 +87,9 @@ const getNewFileHandle = () => {
 		type: 'save-file',
 		accepts: [
 			{
-				description: 'Text file',
-				extensions: ['bin'],
-				mimeTypes: ['text/plain']
+				description: 'Zip archive',
+				extensions: ['zip'],
+				mimeTypes: ['application/zip']
 			}
 		]
 	};
