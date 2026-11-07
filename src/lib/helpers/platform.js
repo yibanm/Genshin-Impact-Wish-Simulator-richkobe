@@ -173,8 +173,30 @@ const blobToBase64 = (blob) =>
 		reader.readAsDataURL(blob);
 	});
 
-const saveTextFileAndroid = (text, filename) =>
-	saveViaMediaStore(text, filename, 'application/octet-stream');
+/**
+ * 安卓导出文本/zip：先弹系统「保存到此位置」选择器（用户裁定 2026-11-07：
+ * 导出必须自己选位置，静默存 Download 用户不知道存哪了）；
+ * 用户取消 = 已处理（return true，不落 <a download> 死路）；
+ * 选择器不可用/写失败才回落 MediaSaver 直存 Download。
+ */
+const saveTextFileAndroid = async (text, filename) => {
+	const saver = await loadMediaSaver();
+	if (saver?.saveWithPicker) {
+		try {
+			const base64 = btoa(unescape(encodeURIComponent(text)));
+			const res = await saver.saveWithPicker({
+				name: filename,
+				mime: 'application/zip',
+				base64
+			});
+			if (res?.cancelled) return true;
+			if (res?.path) return true;
+		} catch (e) {
+			console.error('保存选择器失败，回落直存 Download：', e);
+		}
+	}
+	return saveViaMediaStore(text, filename, 'application/octet-stream');
+};
 
 /**
  * 桌面（Tauri）保存二进制：弹「另存为」对话框 + fs 写二进制。
@@ -201,11 +223,35 @@ const saveBlobTauri = async (blob, filename) => {
 
 /**
  * 安卓保存截图到 Download 目录。非安卓返回 false 由调用方回退 saveAs。
+ * 截图沿用第七轮裁定「默认存 Download」不弹选择器；导出（zip）走选择器，
+ * 见 saveBlobAndroidPicker / saveTextFileAndroid。
  */
 export const saveBlobNative = async (blob, filename, mime = 'image/png') => {
 	if (isNativeAndroid()) return saveViaMediaStore(blob, filename, mime);
 	if (isTauri()) return saveBlobTauri(blob, filename);
 	return false;
+};
+
+/**
+ * 安卓导出 zip：弹系统选择器让用户自选位置（用户裁定 2026-11-07）；
+ * 取消=已处理，选择器不可用/写失败回落直存 Download。
+ */
+export const saveBlobWithPicker = async (blob, filename, mime = 'application/zip') => {
+	if (!isNativeAndroid()) return saveBlobNative(blob, filename, mime);
+	const saver = await loadMediaSaver();
+	if (saver?.saveWithPicker) {
+		try {
+			const res = await saver.saveWithPicker({
+				name: filename,
+				mime,
+				base64: await blobToBase64(blob)
+			});
+			if (res?.cancelled || res?.path) return true;
+		} catch (e) {
+			console.error('保存选择器失败，回落直存 Download：', e);
+		}
+	}
+	return saveViaMediaStore(blob, filename, mime);
 };
 
 /**

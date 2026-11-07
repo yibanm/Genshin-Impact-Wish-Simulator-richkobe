@@ -3,7 +3,7 @@ import { BannerManager, HistoryManager, AssetManager } from './api-indexeddb';
 import { cookie } from './api-cookie';
 import { storageLocal } from './api-localstore';
 import { randomNumber } from '../gacha/itemdrop-base';
-import { saveBlobNative, saveTextFileNative } from '../platform';
+import { saveBlobWithPicker, saveTextFileNative } from '../platform';
 import { fireMirror } from './api-filestore';
 
 const generateExportID = () => {
@@ -73,8 +73,8 @@ export const exportFileLegacy = async () => {
 	const blob = await generateFileString();
 	const filename = stampFilename();
 
-	// 原生通道优先（安卓三级回落、桌面另存为）；都失败才回 Web 下载
-	const handled = await saveBlobNative(blob, filename, 'application/zip');
+	// 安卓弹系统选择器自选位置、桌面弹另存为；都失败才回 Web 下载
+	const handled = await saveBlobWithPicker(blob, filename, 'application/zip');
 	if (handled) {
 		fireMirror();
 		return;
